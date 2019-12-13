@@ -5,7 +5,6 @@ import com.a6raywa1cher.mucpollspring.rest.request.UserRegistrationRequest;
 import com.a6raywa1cher.mucpollspring.service.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,7 +30,7 @@ public class UserController {
 	}
 
 	@GetMapping("/cookies")
-	@Secured("ROLE_USER")
+//	@Secured("ROLE_USER")
 	public ResponseEntity<String> safeZone() {
 		return ResponseEntity.ok("COOKIES!");
 	}

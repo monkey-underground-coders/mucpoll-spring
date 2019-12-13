@@ -1,0 +1,18 @@
+spring:
+  jmx:
+    default-domain: com.a6raywa1cher.mucpollspring
+    unique-names: true
+# ===============================
+# DB CONNECTION
+# ===============================
+spring.datasource.url:
+spring.datasource.username:
+spring.datasource.password:
+# ===============================
+# JPA / HIBERNATE
+# ===============================
+spring.jpa.show-sql: false
+spring.jpa.hibernate.ddl-auto: update
+spring.jpa.properties.hibernate.default_schema: public
+spring.jpa.properties.hibernate.current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext
+spring.jpa.properties.hibernate.temp.use_jdbc_metadata_defaults: false

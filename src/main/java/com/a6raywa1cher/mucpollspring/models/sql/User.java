@@ -1,4 +1,4 @@
-package com.a6raywa1cher.mucpollspring.models;
+package com.a6raywa1cher.mucpollspring.models.sql;
 
 import lombok.Data;
 

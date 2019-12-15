@@ -1,8 +1,8 @@
 package com.a6raywa1cher.mucpollspring.service.impl;
 
 import com.a6raywa1cher.mucpollspring.dao.repository.UserRepository;
-import com.a6raywa1cher.mucpollspring.models.User;
-import com.a6raywa1cher.mucpollspring.models.UserStatus;
+import com.a6raywa1cher.mucpollspring.models.sql.User;
+import com.a6raywa1cher.mucpollspring.models.sql.UserStatus;
 import com.a6raywa1cher.mucpollspring.service.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;

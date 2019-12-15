@@ -1,7 +1,7 @@
 package com.a6raywa1cher.mucpollspring.config.security;
 
 import com.a6raywa1cher.mucpollspring.dao.repository.UserRepository;
-import com.a6raywa1cher.mucpollspring.models.User;
+import com.a6raywa1cher.mucpollspring.models.sql.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

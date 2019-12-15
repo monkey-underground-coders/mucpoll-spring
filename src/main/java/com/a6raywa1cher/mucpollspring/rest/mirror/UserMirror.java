@@ -1,7 +1,7 @@
 package com.a6raywa1cher.mucpollspring.rest.mirror;
 
-import com.a6raywa1cher.mucpollspring.models.User;
-import com.a6raywa1cher.mucpollspring.models.UserStatus;
+import com.a6raywa1cher.mucpollspring.models.sql.User;
+import com.a6raywa1cher.mucpollspring.models.sql.UserStatus;
 import lombok.Data;
 
 @Data

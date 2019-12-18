@@ -1,7 +1,7 @@
 package com.a6raywa1cher.mucpollspring.config;
 
 import com.a6raywa1cher.mucpollspring.config.security.UserDetailsServiceImpl;
-import com.a6raywa1cher.mucpollspring.dao.repository.UserRepository;
+import com.a6raywa1cher.mucpollspring.dao.repository.sql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

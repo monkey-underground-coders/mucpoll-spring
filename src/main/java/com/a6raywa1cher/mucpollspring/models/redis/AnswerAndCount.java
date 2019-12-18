@@ -5,14 +5,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
-import java.util.List;
-
-@RedisHash("PollSession")
+@RedisHash("AnswerAndCount")
 @Data
-public class TemporaryPollSession {
+public class AnswerAndCount {
 	@Id
 	private long id;
 	@Indexed
-	private long pid;
-	private List<TemporaryPollSessionQuestion> questions;
+	private long aid;
+	private long count;
 }

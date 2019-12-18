@@ -12,16 +12,15 @@ public class PollQuestion {
 	@GeneratedValue
 	private Long id;
 
-	@Column
-	private Integer position;
-
 	@ManyToOne(optional = false, cascade = CascadeType.PERSIST)
 	private Poll poll;
+
+	@Column(nullable = false)
+	private Integer index;
 
 	@Column
 	private String question;
 
-	@ElementCollection(fetch = FetchType.EAGER)
-	@OrderColumn
+	@OneToMany(mappedBy = "pollQuestion", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<PollQuestionAnswer> answerOptions;
 }

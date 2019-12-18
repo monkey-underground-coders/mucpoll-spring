@@ -11,6 +11,9 @@ public class PollQuestionAnswer {
 	@GeneratedValue
 	private Long id;
 
+	@Column(nullable = false)
+	private Integer index;
+
 	@ManyToOne(optional = false)
 	private PollQuestion pollQuestion;
 

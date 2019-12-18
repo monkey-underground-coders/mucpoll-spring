@@ -15,7 +15,6 @@ public class Poll {
 	@Column
 	private String name;
 
-	@OrderColumn
 	@OneToMany(mappedBy = "poll", cascade = CascadeType.ALL)
 	private List<PollQuestion> questions;
 

@@ -1,4 +1,4 @@
-package com.a6raywa1cher.mucpollspring.dao.repository;
+package com.a6raywa1cher.mucpollspring.dao.repository.sql;
 
 import com.a6raywa1cher.mucpollspring.models.sql.User;
 import org.springframework.data.repository.CrudRepository;

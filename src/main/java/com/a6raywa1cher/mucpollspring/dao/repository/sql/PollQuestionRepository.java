@@ -10,6 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface PollQuestionRepository extends CrudRepository<PollQuestion, Long> {
-	@Query("select max(pq.index) from PollQuestion as pq where pq.poll = ?1 group by pq.index")
+	@Query(value = "select max(index) from poll_question where poll_id = ?1", nativeQuery = true)
 	Optional<Integer> getMaxIndex(Poll poll);
 }

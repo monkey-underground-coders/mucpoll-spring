@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Repository
 public class AnswerAndCountRepositoryImpl implements AnswerAndCountRepository {
@@ -22,8 +23,11 @@ public class AnswerAndCountRepositoryImpl implements AnswerAndCountRepository {
 	@Override
 	public AnswerAndCount save(AnswerAndCount c) {
 		try {
+			if (c.getId() == null) {
+				c.setId(UUID.randomUUID().toString());
+			}
 			Map ruleHash = new ObjectMapper().convertValue(c, Map.class);
-			redisTemplate.opsForHash().put(KEY, c.getAid(), ruleHash);
+			redisTemplate.opsForHash().put(KEY, c.getId(), ruleHash);
 			return c;
 		} catch (Exception e) {
 			logger.error("Save to Redis exception", e);

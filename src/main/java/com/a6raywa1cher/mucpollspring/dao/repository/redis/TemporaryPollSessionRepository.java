@@ -5,6 +5,6 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TemporaryPollSessionRepository extends CrudRepository<TemporaryPollSession, Long> {
+public interface TemporaryPollSessionRepository extends CrudRepository<TemporaryPollSession, String> {
 
 }

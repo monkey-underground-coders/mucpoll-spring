@@ -5,6 +5,7 @@ import com.a6raywa1cher.mucpollspring.rest.request.UserRegistrationRequest;
 import com.a6raywa1cher.mucpollspring.service.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,9 @@ import javax.validation.Valid;
 @RequestMapping("/user")
 public class UserController {
 	private UserService userService;
+
+	@Autowired
+	private SimpMessagingTemplate template;
 
 	@Autowired
 	public UserController(UserService userService) {
@@ -32,6 +36,8 @@ public class UserController {
 	@GetMapping("/cookies")
 //	@Secured("ROLE_USER")
 	public ResponseEntity<String> safeZone() {
+		String text = "[" + System.currentTimeMillis() + "]:" + "cookies!";
+		template.convertAndSend("/topic/cookies", text);
 		return ResponseEntity.ok("COOKIES!");
 	}
 }

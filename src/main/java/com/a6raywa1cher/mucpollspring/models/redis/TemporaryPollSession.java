@@ -11,8 +11,9 @@ import java.util.List;
 @Data
 public class TemporaryPollSession {
 	@Id
-	private long id;
+	private String id;
 	@Indexed
 	private long pid;
+	private Long currentQid;
 	private List<TemporaryPollSessionQuestion> questions;
 }

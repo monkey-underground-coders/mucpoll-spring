@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.index.Indexed;
 @Data
 public class AnswerAndCount {
 	@Id
-	private long id;
+	private String id;
 	@Indexed
 	private long aid;
 	private long count;

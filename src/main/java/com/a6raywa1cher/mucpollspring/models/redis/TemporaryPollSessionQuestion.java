@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class TemporaryPollSessionQuestion {
 	@Indexed
-	private long id;
+	private String id;
 	@Indexed
 	private long qid;
 	private List<AnswerAndCount> map;

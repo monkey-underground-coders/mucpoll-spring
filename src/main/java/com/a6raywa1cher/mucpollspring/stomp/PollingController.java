@@ -1,8 +1,10 @@
 package com.a6raywa1cher.mucpollspring.stomp;
 
+import com.a6raywa1cher.mucpollspring.models.redis.AnswerAndCount;
 import com.a6raywa1cher.mucpollspring.models.redis.TemporaryPollSession;
-import com.a6raywa1cher.mucpollspring.models.redis.TemporaryPollSessionQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.Poll;
+import com.a6raywa1cher.mucpollspring.service.exceptions.AnswerNotFoundException;
+import com.a6raywa1cher.mucpollspring.service.exceptions.TemporaryPollSessionNotFound;
 import com.a6raywa1cher.mucpollspring.service.interfaces.PollService;
 import com.a6raywa1cher.mucpollspring.service.interfaces.VotingService;
 import com.a6raywa1cher.mucpollspring.stomp.exceptions.ForbiddenException;
@@ -18,7 +20,6 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Controller
 public class PollingController {
@@ -38,28 +39,36 @@ public class PollingController {
 //		votingService.createNewTemporaryPollSession(vote.getPid());
 	}
 
-	@MessageMapping("/voteinfo/{pid}/{sid}")
+	@MessageMapping("/vote/{pid}/{sid}/info")
 	@SendTo("/topic/{pid}/{sid}")
-	public CurrentSessionInfoResponse voteJoin(@DestinationVariable("pid") Long pid,
+	public CurrentSessionInfoResponse voteInfo(@DestinationVariable("pid") Long pid,
 	                                           @DestinationVariable("sid") String sid) {
 		Optional<TemporaryPollSession> optionalTemporaryPollSession = votingService.getBySid(sid);
-		CurrentSessionInfoResponse response = new CurrentSessionInfoResponse();
+		CurrentSessionInfoResponse response;
 		if (optionalTemporaryPollSession.isEmpty()) {
+			response = new CurrentSessionInfoResponse();
 			response.setOpen(false);
 			response.setCurrentQid(null);
 			response.setAnswers(Collections.emptyList());
 		} else {
 			TemporaryPollSession temporaryPollSession = optionalTemporaryPollSession.get();
-			response.setCurrentQid(temporaryPollSession.getCurrentQid());
-			response.setOpen(true);
-			TemporaryPollSessionQuestion question = temporaryPollSession.getQuestions().stream()
-					.filter(q -> q.getQid() == temporaryPollSession.getCurrentQid())
-					.findFirst().orElseThrow();
-			response.setAnswers(question.getMap().stream()
-					.map(a -> new CurrentSessionInfoResponse.AnswerAndCurrentCount(a.getAid(), a.getCount()))
-					.collect(Collectors.toList()));
+			response = new CurrentSessionInfoResponse(temporaryPollSession);
 		}
 		return response;
+	}
+
+	@MessageMapping("/vote/{pid}/{sid}/append")
+	@SendTo("/topic/{pid}/{sid}")
+	public CurrentSessionInfoResponse appendVote(@DestinationVariable("pid") Long pid,
+	                                             @DestinationVariable("sid") String sid,
+	                                             @Payload AppendNewVote vote) {
+		try {
+			AnswerAndCount answerAndCount = votingService.appendVote(sid, vote.getAid());
+			TemporaryPollSession temporaryPollSession = votingService.getBySid(sid).get();
+			return new CurrentSessionInfoResponse(temporaryPollSession);
+		} catch (TemporaryPollSessionNotFound | AnswerNotFoundException temporaryPollSessionNotFound) {
+			return null;
+		}
 	}
 
 	@MessageMapping("/polladmin/{pid}/openvote")

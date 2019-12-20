@@ -34,10 +34,10 @@ public class PollServiceImpl implements PollService {
 	}
 
 	@Override
-	public Poll createNewPoll(Long userId, String name) {
+	public Poll createNewPoll(Long userId, String name) throws UserNotFoundException {
 		Optional<User> optionalUser = userRepository.findById(userId);
 		if (optionalUser.isEmpty()) {
-			throw new UserNotFoundException();
+			throw new UserNotFoundException(userId);
 		}
 		Poll poll = new Poll();
 		poll.setName(name);

@@ -1,6 +1,6 @@
 package com.a6raywa1cher.mucpollspring.service.impl;
 
-import com.a6raywa1cher.mucpollspring.dao.repository.redis.TemporaryPollSessionQuestionRepository;
+import com.a6raywa1cher.mucpollspring.dao.repository.redis.AnswerAndCountRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.redis.TemporaryPollSessionRepository;
 import com.a6raywa1cher.mucpollspring.models.redis.AnswerAndCount;
 import com.a6raywa1cher.mucpollspring.models.redis.TemporaryPollSession;
@@ -8,6 +8,8 @@ import com.a6raywa1cher.mucpollspring.models.redis.TemporaryPollSessionQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.Poll;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestionAnswer;
+import com.a6raywa1cher.mucpollspring.service.exceptions.AnswerNotFoundException;
+import com.a6raywa1cher.mucpollspring.service.exceptions.TemporaryPollSessionNotFound;
 import com.a6raywa1cher.mucpollspring.service.interfaces.VotingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,16 +18,21 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+//import com.a6raywa1cher.mucpollspring.dao.repository.redis.TemporaryPollSessionQuestionRepository;
+
 @Service
 public class VotingServiceImpl implements VotingService {
 	private TemporaryPollSessionRepository temporaryPollSessionRepository;
-	private TemporaryPollSessionQuestionRepository temporaryPollSessionQuestionRepository;
+	//	private TemporaryPollSessionQuestionRepository temporaryPollSessionQuestionRepository;
+	private AnswerAndCountRepository answerAndCountRepository;
 
 	@Autowired
 	public VotingServiceImpl(TemporaryPollSessionRepository temporaryPollSessionRepository,
-	                         TemporaryPollSessionQuestionRepository temporaryPollSessionQuestionRepository) {
+//	                         TemporaryPollSessionQuestionRepository temporaryPollSessionQuestionRepository,
+                             AnswerAndCountRepository answerAndCountRepository) {
 		this.temporaryPollSessionRepository = temporaryPollSessionRepository;
-		this.temporaryPollSessionQuestionRepository = temporaryPollSessionQuestionRepository;
+//		this.temporaryPollSessionQuestionRepository = temporaryPollSessionQuestionRepository;
+		this.answerAndCountRepository = answerAndCountRepository;
 	}
 
 	@Override
@@ -55,7 +62,25 @@ public class VotingServiceImpl implements VotingService {
 					return question;
 				})
 				.collect(Collectors.toList()));
-		return temporaryPollSessionRepository.save(temporaryPollSession);
+		TemporaryPollSession save = temporaryPollSessionRepository.save(temporaryPollSession);
+		return save;
+	}
+
+	@Override
+	public AnswerAndCount appendVote(String sid, Long aid) throws TemporaryPollSessionNotFound, AnswerNotFoundException {
+		Optional<TemporaryPollSession> temporaryPollSession = temporaryPollSessionRepository.findById(sid);
+		if (temporaryPollSession.isEmpty()) {
+			throw new TemporaryPollSessionNotFound(sid);
+		}
+		Optional<AnswerAndCount> answerAndCount = temporaryPollSession.stream()
+				.flatMap(s -> s.getQuestions().stream())
+				.flatMap(q -> q.getMap().stream())
+				.filter(a -> a.getAid() == aid)
+				.findFirst();
+		if (answerAndCount.isEmpty()) {
+			throw new AnswerNotFoundException(aid);
+		}
+		return answerAndCountRepository.incr(temporaryPollSession.get(), answerAndCount.get());
 	}
 
 	@Override

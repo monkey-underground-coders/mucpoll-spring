@@ -4,6 +4,5 @@ import lombok.Data;
 
 @Data
 public class AppendNewVote {
-	private Long pid;
-	private Long question;
+	private Long aid;
 }

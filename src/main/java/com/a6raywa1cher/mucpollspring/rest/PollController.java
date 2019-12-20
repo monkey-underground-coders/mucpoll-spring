@@ -7,6 +7,7 @@ import com.a6raywa1cher.mucpollspring.rest.request.CreatePollQuestionRequest;
 import com.a6raywa1cher.mucpollspring.rest.request.CreatePollRequest;
 import com.a6raywa1cher.mucpollspring.service.interfaces.PollService;
 import com.a6raywa1cher.mucpollspring.service.interfaces.UserService;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +37,7 @@ public class PollController {
 		return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 	}
 
+	@SneakyThrows
 	@PostMapping("/create")
 	public ResponseEntity<PollMirror> createPoll(@RequestBody @Valid CreatePollRequest dto) {
 		Poll poll = pollService.createNewPoll(

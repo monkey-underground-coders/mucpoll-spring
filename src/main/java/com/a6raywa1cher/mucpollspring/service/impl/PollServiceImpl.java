@@ -4,7 +4,10 @@ import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollQuestionAnswerRepos
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollQuestionRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.UserRepository;
-import com.a6raywa1cher.mucpollspring.models.sql.*;
+import com.a6raywa1cher.mucpollspring.models.sql.Poll;
+import com.a6raywa1cher.mucpollspring.models.sql.PollQuestion;
+import com.a6raywa1cher.mucpollspring.models.sql.PollQuestionAnswer;
+import com.a6raywa1cher.mucpollspring.models.sql.User;
 import com.a6raywa1cher.mucpollspring.service.exceptions.UserNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.interfaces.PollService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +46,6 @@ public class PollServiceImpl implements PollService {
 		poll.setName(name);
 		poll.setQuestions(Collections.emptyList());
 		poll.setCreator(optionalUser.get());
-		poll.setStatus(PollStatus.EDITABLE);
 		return pollRepository.save(poll);
 	}
 

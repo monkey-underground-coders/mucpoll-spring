@@ -1,3 +1,5 @@
+app:
+  history-directory:
 spring:
   jmx:
     default-domain: com.a6raywa1cher.mucpollspring

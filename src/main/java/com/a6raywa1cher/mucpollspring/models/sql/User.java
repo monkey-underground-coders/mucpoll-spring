@@ -1,5 +1,9 @@
 package com.a6raywa1cher.mucpollspring.models.sql;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -7,6 +11,9 @@ import java.util.List;
 
 @Entity
 @Data
+@JsonIdentityInfo(
+		generator = ObjectIdGenerators.PropertyGenerator.class,
+		property = "id")
 public class User {
 	@Id
 	@GeneratedValue
@@ -15,6 +22,7 @@ public class User {
 	@Column(nullable = false, unique = true)
 	private String username;
 
+	@JsonIgnore
 	@Column(nullable = false)
 	private String password;
 
@@ -22,6 +30,7 @@ public class User {
 	@Enumerated(EnumType.ORDINAL)
 	private UserStatus status;
 
+	@JsonBackReference
 	@OneToMany(mappedBy = "creator", cascade = CascadeType.ALL)
 	private List<Poll> pollList;
 

@@ -1,50 +1,66 @@
 package com.a6raywa1cher.mucpollspring.service.impl;
 
+import com.a6raywa1cher.mucpollspring.dao.repository.file.PollSessionRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.redis.AnswerAndCountRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.redis.TemporaryPollSessionRepository;
+import com.a6raywa1cher.mucpollspring.dao.repository.sql.UserRepository;
+import com.a6raywa1cher.mucpollspring.models.file.PollSession;
 import com.a6raywa1cher.mucpollspring.models.redis.AnswerAndCount;
 import com.a6raywa1cher.mucpollspring.models.redis.TemporaryPollSession;
 import com.a6raywa1cher.mucpollspring.models.redis.TemporaryPollSessionQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.Poll;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestionAnswer;
+import com.a6raywa1cher.mucpollspring.models.sql.User;
 import com.a6raywa1cher.mucpollspring.service.exceptions.AnswerNotFoundException;
+import com.a6raywa1cher.mucpollspring.service.exceptions.QuestionNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.exceptions.TemporaryPollSessionNotFound;
 import com.a6raywa1cher.mucpollspring.service.interfaces.VotingService;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-//import com.a6raywa1cher.mucpollspring.dao.repository.redis.TemporaryPollSessionQuestionRepository;
 
 @Service
 public class VotingServiceImpl implements VotingService {
 	private TemporaryPollSessionRepository temporaryPollSessionRepository;
-	//	private TemporaryPollSessionQuestionRepository temporaryPollSessionQuestionRepository;
 	private AnswerAndCountRepository answerAndCountRepository;
+	private PollSessionRepository pollSessionRepository;
+	private UserRepository userRepository;
 
 	@Autowired
 	public VotingServiceImpl(TemporaryPollSessionRepository temporaryPollSessionRepository,
-//	                         TemporaryPollSessionQuestionRepository temporaryPollSessionQuestionRepository,
-                             AnswerAndCountRepository answerAndCountRepository) {
+	                         AnswerAndCountRepository answerAndCountRepository,
+	                         PollSessionRepository pollSessionRepository,
+	                         UserRepository userRepository) {
 		this.temporaryPollSessionRepository = temporaryPollSessionRepository;
-//		this.temporaryPollSessionQuestionRepository = temporaryPollSessionQuestionRepository;
 		this.answerAndCountRepository = answerAndCountRepository;
+		this.pollSessionRepository = pollSessionRepository;
+		this.userRepository = userRepository;
 	}
 
 	@Override
-	public TemporaryPollSession createNewTemporaryPollSession(Poll poll) {
+	@Transactional
+	@SneakyThrows
+	public TemporaryPollSession createNewTemporaryPollSession(Poll poll, long uid) {
 		if (poll.getQuestions().size() == 0) {
 			return null;
 		}
 		TemporaryPollSession temporaryPollSession = new TemporaryPollSession();
 		temporaryPollSession.setPid(poll.getId());
+		temporaryPollSession.setUid(uid);
 		temporaryPollSession.setCurrentQid(poll.getQuestions().stream()
 				.min(Comparator.comparingInt(PollQuestion::getIndex))
 				.get().getId());
+		temporaryPollSession.setCreatedAt(LocalDateTime.now());
+		temporaryPollSession.serializePoll(poll);
 		temporaryPollSession.setQuestions(poll.getQuestions().stream()
 				.sorted(Comparator.comparingInt(PollQuestion::getIndex))
 				.map(pq -> {
@@ -84,7 +100,51 @@ public class VotingServiceImpl implements VotingService {
 	}
 
 	@Override
+	public TemporaryPollSession changeQuestion(String sid, Long qid) throws TemporaryPollSessionNotFound, QuestionNotFoundException {
+		Optional<TemporaryPollSession> optional = temporaryPollSessionRepository.findById(sid);
+		if (optional.isEmpty()) {
+			throw new TemporaryPollSessionNotFound(sid);
+		}
+		TemporaryPollSession tps = optional.get();
+		tps.getQuestions().stream()
+				.filter(q -> q.getQid() == qid)
+				.findAny()
+				.orElseThrow(() -> new QuestionNotFoundException(qid));
+		tps.setCurrentQid(qid);
+		return temporaryPollSessionRepository.save(tps);
+	}
+
+	@Override
 	public Optional<TemporaryPollSession> getBySid(String sid) {
 		return temporaryPollSessionRepository.findById(sid);
+	}
+
+	@Override
+	@Transactional
+	public PollSession closeVote(String sid) throws TemporaryPollSessionNotFound {
+		Optional<TemporaryPollSession> optional = temporaryPollSessionRepository.findById(sid);
+		if (optional.isEmpty()) {
+			throw new TemporaryPollSessionNotFound(sid);
+		}
+		return closeVote(optional.get());
+	}
+
+	@Override
+	@Transactional
+	@SneakyThrows
+	public PollSession closeVote(TemporaryPollSession tps) {
+		Poll poll = tps.deserializePoll();
+		PollSession pollSession = pollSessionRepository.save(new PollSession(tps, poll));
+		temporaryPollSessionRepository.delete(tps);
+		return pollSession;
+	}
+
+	@Override
+	@Transactional
+	public List<PollSession> closeAllVotesByUser(String username) {
+		User user = userRepository.getByUsername(username).orElseThrow();
+		return temporaryPollSessionRepository.getAllByUid(user.getId()).stream()
+				.map(this::closeVote)
+				.collect(Collectors.toList());
 	}
 }

@@ -1,7 +1,6 @@
 package com.a6raywa1cher.mucpollspring.rest.mirror;
 
 import com.a6raywa1cher.mucpollspring.models.sql.Poll;
-import com.a6raywa1cher.mucpollspring.models.sql.PollStatus;
 import lombok.Data;
 
 import java.util.Collections;
@@ -19,8 +18,6 @@ public class PollMirror {
 
 	private UserMirror creator;
 
-	private PollStatus status;
-
 	public static PollMirror convert(Poll poll, boolean includeQuestions) {
 		PollMirror mirror = new PollMirror();
 		mirror.setId(poll.getId());
@@ -32,7 +29,6 @@ public class PollMirror {
 						.collect(Collectors.toList()) :
 				Collections.emptyList());
 		mirror.setCreator(UserMirror.convert(poll.getCreator()));
-		mirror.setStatus(poll.getStatus());
 		return mirror;
 	}
 }

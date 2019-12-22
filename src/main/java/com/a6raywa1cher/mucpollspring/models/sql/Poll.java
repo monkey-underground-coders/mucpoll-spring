@@ -25,4 +25,17 @@ public class Poll {
 
 	@ManyToOne(optional = false, cascade = {CascadeType.PERSIST})
 	private User creator;
+
+	@Override
+	public String toString() {
+		return "Poll{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", questions=[" + questions.stream()
+				.map(PollQuestion::getId)
+				.map(l -> Long.toString(l))
+				.reduce((a, b) -> a + ',' + b).orElse("") + ']' +
+				", creator=" + (creator != null ? creator.getId() : null) +
+				'}';
+	}
 }

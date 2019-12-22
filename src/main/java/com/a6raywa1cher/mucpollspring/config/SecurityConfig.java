@@ -1,11 +1,13 @@
 package com.a6raywa1cher.mucpollspring.config;
 
 import com.a6raywa1cher.mucpollspring.config.security.UserDetailsServiceImpl;
+import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -14,12 +16,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-	private UserRepository repository;
+	private UserRepository userRepository;
+	private PollRepository pollRepository;
 
 	@Autowired
-	public SecurityConfig(UserRepository repository) {
-		this.repository = repository;
+	public SecurityConfig(UserRepository userRepository, PollRepository pollRepository) {
+		this.userRepository = userRepository;
+		this.pollRepository = pollRepository;
 	}
 
 	@Bean
@@ -39,6 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and()
 				.authorizeRequests()
+				.antMatchers("/").permitAll()
 				.antMatchers("/user/reg").permitAll()
 //				.antMatchers("/user/cookies").anonymous()
 				.antMatchers("/v2/api-docs", "/webjars/**", "/swagger-resources", "/swagger-resources/**", "/swagger-ui.html").permitAll()
@@ -52,6 +58,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public UserDetailsService userDetailsService() {
-		return new UserDetailsServiceImpl(repository);
+		return new UserDetailsServiceImpl(userRepository, pollRepository);
 	}
 }

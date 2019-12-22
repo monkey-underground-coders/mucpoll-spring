@@ -9,6 +9,10 @@ import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
@@ -18,7 +22,10 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Repository
@@ -26,6 +33,8 @@ public class PollSessionRepositoryImpl implements PollSessionRepository {
 	private static final Logger log = LoggerFactory.getLogger(PollSessionRepositoryImpl.class);
 	private Path path;
 	private ObjectMapper objectMapper;
+	private static final Pattern uuid =
+			Pattern.compile("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})");
 
 	@Autowired
 	public PollSessionRepositoryImpl(AppConfigProperties appConfigProperties) {
@@ -73,6 +82,34 @@ public class PollSessionRepositoryImpl implements PollSessionRepository {
 			log.info(String.format("Sid %s at pid %d not found or IO error", sid, pid), e);
 			return Optional.empty();
 		}
+	}
+
+	@Override
+	@SneakyThrows
+	public Page<PollSession> getPageByPid(Long pid, Pageable pageable) {
+		Path pathToPoll = pidToPath(pid);
+		Files.createDirectories(pathToPoll);
+		Sort.Order order = pageable.getSort().getOrderFor("recordedAt");
+		Comparator<Path> pathComparator = (order != null && order.getDirection().isAscending()) ?
+				Comparator.naturalOrder() : Comparator.reverseOrder();
+
+		return new PageImpl<>(Files.list(pathToPoll)
+				.filter(p -> uuid.matcher(p.getFileName().toString()).matches())
+				.sorted(Comparator.comparingLong(p -> p.toFile().lastModified()))
+				.sorted(pathComparator)
+				.skip(pageable.getOffset())
+				.limit(pageable.getPageSize())
+				.map(p -> {
+					try {
+						return objectMapper.readValue(p.toFile(), PollSession.class);
+					} catch (IOException e) {
+						log.info(String.format("Path %s at pid %d not found or IO error", p, pid), e);
+						return null;
+					}
+				})
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList())
+		);
 	}
 
 	@Override

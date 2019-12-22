@@ -36,6 +36,7 @@ public class CurrentSessionInfoResponse {
 	public CurrentSessionInfoResponse(PollSession pollSession) {
 		open = false;
 		currentQid = null;
+		pollInfo = null;
 		answers = Collections.emptyList();
 	}
 

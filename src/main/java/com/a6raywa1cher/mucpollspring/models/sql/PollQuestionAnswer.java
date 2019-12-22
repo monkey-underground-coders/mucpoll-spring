@@ -24,4 +24,14 @@ public class PollQuestionAnswer {
 
 	@Column
 	private String answer;
+
+	@Override
+	public String toString() {
+		return "PollQuestionAnswer{" +
+				"id=" + id +
+				", index=" + index +
+				", pollQuestion=" + (pollQuestion != null ? pollQuestion.getId() : "null") +
+				", answer='" + answer + '\'' +
+				'}';
+	}
 }

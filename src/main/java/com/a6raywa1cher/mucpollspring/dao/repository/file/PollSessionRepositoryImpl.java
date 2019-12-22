@@ -133,4 +133,18 @@ public class PollSessionRepositoryImpl implements PollSessionRepository {
 			log.error("Delete poll history unsuccessful", e);
 		}
 	}
+
+	@Override
+	public void delete(Long pid, String sid) {
+		if (!uuid.matcher(sid).matches()) {
+			return;
+		}
+		Path pathToPoll = pidToPath(pid);
+		Path pathToFile = pathToPoll.resolve(sid);
+		try {
+			Files.deleteIfExists(pathToFile);
+		} catch (IOException e) {
+			log.error(String.format("Delete poll error, pid:%d sid:%s", pid, sid), e);
+		}
+	}
 }

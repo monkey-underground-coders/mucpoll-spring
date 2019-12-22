@@ -17,4 +17,6 @@ public interface PollSessionRepository {
 	PollSession save(PollSession pollSession);
 
 	void deleteAllByPid(Long pid);
+
+	void delete(Long pid, String sid);
 }

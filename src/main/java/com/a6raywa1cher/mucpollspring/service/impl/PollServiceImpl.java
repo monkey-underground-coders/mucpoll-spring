@@ -148,4 +148,14 @@ public class PollServiceImpl implements PollService {
 	public Page<PollSession> getPollSessionsPage(Long pid, Pageable pageable) {
 		return pollSessionRepository.getPageByPid(pid, pageable);
 	}
+
+	@Override
+	public Optional<PollSession> getPollSession(Long pid, String sid) {
+		return pollSessionRepository.getBySidAndPid(pid, sid);
+	}
+
+	@Override
+	public void deletePollSession(Long pid, String sid) {
+		pollSessionRepository.delete(pid, sid);
+	}
 }

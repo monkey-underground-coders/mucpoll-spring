@@ -24,6 +24,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -134,9 +135,19 @@ public class VotingServiceImpl implements VotingService {
 	@SneakyThrows
 	public PollSession closeVote(TemporaryPollSession tps) {
 		Poll poll = tps.deserializePoll();
-		PollSession pollSession = pollSessionRepository.save(new PollSession(tps, poll));
-		temporaryPollSessionRepository.delete(tps);
-		return pollSession;
+		boolean isAnyVoteDetected = tps.getQuestions().stream()
+				.flatMap(tpsq -> tpsq.getMap().stream())
+				.map(AnswerAndCount::getCount)
+				.anyMatch(l -> l > 0);
+		if (isAnyVoteDetected) {
+			PollSession pollSession = pollSessionRepository.save(new PollSession(tps, poll));
+			temporaryPollSessionRepository.delete(tps);
+			return pollSession;
+		} else {
+			temporaryPollSessionRepository.delete(tps);
+			return null;
+		}
+
 	}
 
 	@Override
@@ -145,6 +156,7 @@ public class VotingServiceImpl implements VotingService {
 		User user = userRepository.getByUsername(username).orElseThrow();
 		return temporaryPollSessionRepository.getAllByUid(user.getId()).stream()
 				.map(this::closeVote)
+				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 	}
 }

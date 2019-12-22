@@ -29,5 +29,9 @@ public interface PollService {
 
 	Page<PollSession> getPollSessionsPage(Long pid, Pageable pageable);
 
+	Optional<PollSession> getPollSession(Long pid, String sid);
+
+	void deletePollSession(Long pid, String sid);
+
 //	PollQuestion updateQuestion(PollQuestion pollQuestion);
 }

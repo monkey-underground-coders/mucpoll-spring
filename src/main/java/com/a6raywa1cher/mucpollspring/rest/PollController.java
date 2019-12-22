@@ -102,6 +102,29 @@ public class PollController {
 		return ResponseEntity.ok(pollService.getPollSessionsPage(pid, pageable).toList());
 	}
 
+	@GetMapping("/{pid:[0-9]+}/history/{sid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}")
+	@PreAuthorize("@pollAccessChecker.check(authentication,#pid)")
+	public ResponseEntity<PollSession> getPollSession(@PathVariable long pid, @PathVariable String sid) {
+		$getPoll(pid);
+		Optional<PollSession> optionalPollSession = pollService.getPollSession(pid, sid);
+		if (optionalPollSession.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(optionalPollSession.get());
+	}
+
+	@DeleteMapping("/{pid:[0-9]+}/history/{sid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}")
+	@PreAuthorize("@pollAccessChecker.check(authentication,#pid)")
+	public ResponseEntity<PollSession> deletePollSession(@PathVariable long pid, @PathVariable String sid) {
+		$getPoll(pid);
+		Optional<PollSession> optionalPollSession = pollService.getPollSession(pid, sid);
+		if (optionalPollSession.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		pollService.deletePollSession(pid, sid);
+		return ResponseEntity.ok().build();
+	}
+
 	@GetMapping("/{pid:[0-9]+}")
 	@PreAuthorize("@pollAccessChecker.check(authentication,#pid)")
 	public ResponseEntity<PollMirror> getPoll(@PathVariable long pid) {

@@ -4,6 +4,10 @@ spring:
   jmx:
     default-domain: com.a6raywa1cher.mucpollspring
     unique-names: true
+  redis:
+    database:
+    host:
+    port:
 # ===============================
 # DB CONNECTION
 # ===============================

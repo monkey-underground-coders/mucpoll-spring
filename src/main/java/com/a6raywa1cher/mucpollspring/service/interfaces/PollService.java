@@ -3,6 +3,7 @@ package com.a6raywa1cher.mucpollspring.service.interfaces;
 import com.a6raywa1cher.mucpollspring.models.file.PollSession;
 import com.a6raywa1cher.mucpollspring.models.sql.Poll;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestion;
+import com.a6raywa1cher.mucpollspring.service.exceptions.PollNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.exceptions.UserNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,8 @@ public interface PollService {
 
 	Poll editPoll(Poll poll, String name);
 
+	void incrementLaunchedCount(Long id, int delta) throws PollNotFoundException;
+
 	void deletePoll(Poll poll);
 
 	PollQuestion addQuestion(Poll poll, String title, List<String> answers);
@@ -32,6 +35,4 @@ public interface PollService {
 	Optional<PollSession> getPollSession(Long pid, String sid);
 
 	void deletePollSession(Long pid, String sid);
-
-//	PollQuestion updateQuestion(PollQuestion pollQuestion);
 }

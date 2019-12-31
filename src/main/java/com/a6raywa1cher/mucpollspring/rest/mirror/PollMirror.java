@@ -18,6 +18,8 @@ public class PollMirror {
 
 	private UserMirror creator;
 
+	private int launchedCount;
+
 	public static PollMirror convert(Poll poll, boolean includeQuestions) {
 		PollMirror mirror = new PollMirror();
 		mirror.setId(poll.getId());
@@ -29,6 +31,7 @@ public class PollMirror {
 						.collect(Collectors.toList()) :
 				Collections.emptyList());
 		mirror.setCreator(UserMirror.convert(poll.getCreator()));
+		mirror.setLaunchedCount(poll.getLaunchedCount());
 		return mirror;
 	}
 }

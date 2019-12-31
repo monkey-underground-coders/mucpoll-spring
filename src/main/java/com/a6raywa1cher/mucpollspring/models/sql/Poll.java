@@ -26,6 +26,9 @@ public class Poll {
 	@ManyToOne(optional = false, cascade = {CascadeType.PERSIST})
 	private User creator;
 
+	@Column(nullable = false, columnDefinition = "int default 0")
+	private int launchedCount;
+
 	@Override
 	public String toString() {
 		return "Poll{" +

@@ -10,6 +10,7 @@ import com.a6raywa1cher.mucpollspring.models.sql.Poll;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestionAnswer;
 import com.a6raywa1cher.mucpollspring.models.sql.User;
+import com.a6raywa1cher.mucpollspring.service.exceptions.PollNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.exceptions.UserNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.interfaces.PollService;
 import org.hibernate.HibernateException;
@@ -69,6 +70,15 @@ public class PollServiceImpl implements PollService {
 	public Poll editPoll(Poll poll, String name) {
 		poll.setName(name);
 		return pollRepository.save(poll);
+	}
+
+	@Override
+	public void incrementLaunchedCount(Long id, int delta) throws PollNotFoundException {
+		Optional<Poll> optionalPoll = pollRepository.findById(id);
+		if (optionalPoll.isEmpty()) {
+			throw new PollNotFoundException(id);
+		}
+		pollRepository.incrementLaunchedCount(optionalPoll.get(), delta);
 	}
 
 	@Override

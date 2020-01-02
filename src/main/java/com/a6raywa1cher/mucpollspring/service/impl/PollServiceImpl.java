@@ -6,13 +6,12 @@ import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollQuestionRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.UserRepository;
 import com.a6raywa1cher.mucpollspring.models.file.PollSession;
-import com.a6raywa1cher.mucpollspring.models.sql.Poll;
-import com.a6raywa1cher.mucpollspring.models.sql.PollQuestion;
-import com.a6raywa1cher.mucpollspring.models.sql.PollQuestionAnswer;
-import com.a6raywa1cher.mucpollspring.models.sql.User;
+import com.a6raywa1cher.mucpollspring.models.sql.*;
 import com.a6raywa1cher.mucpollspring.service.exceptions.PollNotFoundException;
+import com.a6raywa1cher.mucpollspring.service.exceptions.QuestionNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.exceptions.UserNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.interfaces.PollService;
+import com.a6raywa1cher.mucpollspring.service.interfaces.TagService;
 import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,6 +29,7 @@ public class PollServiceImpl implements PollService {
 	private PollQuestionRepository pollQuestionRepository;
 	private PollQuestionAnswerRepository pollQuestionAnswerRepository;
 	private PollSessionRepository pollSessionRepository;
+	private TagService tagService;
 
 	@Autowired
 	public PollServiceImpl(UserRepository userRepository, PollRepository pollRepository,
@@ -91,15 +91,22 @@ public class PollServiceImpl implements PollService {
 
 	@Override
 	@Transactional
-	public PollQuestion addQuestion(Poll poll, String title, List<String> answers) {
-		PollQuestion pollQuestion = new PollQuestion();
-		pollQuestion.setPoll(poll);
-		pollQuestion.setQuestion(title);
-		pollQuestion.setIndex(pollQuestionRepository.getMaxIndex(poll).orElse(-1) + 1);
-		listToPQA(answers, pollQuestion);
-		PollQuestion pollQuestion1 = pollQuestionRepository.save(pollQuestion);
+	public List<PollQuestion> addQuestions(Poll poll, Map<String, List<String>> titleAndAnswers) {
+		List<PollQuestion> newPollQuestions = new ArrayList<>(titleAndAnswers.size());
+		int index = pollQuestionRepository.getMaxIndex(poll).orElse(-1) + 1;
+		for (Map.Entry<String, List<String>> entry : titleAndAnswers.entrySet()) {
+			String title = entry.getKey();
+			List<String> answers = entry.getValue();
+			PollQuestion pollQuestion = new PollQuestion();
+			pollQuestion.setPoll(poll);
+			pollQuestion.setQuestion(title);
+			pollQuestion.setIndex(index++);
+			listToPQA(answers, pollQuestion);
+			newPollQuestions.add(pollQuestion);
+		}
+		pollQuestionRepository.saveAll(newPollQuestions);
 		pollRepository.save(poll);
-		return pollQuestion1;
+		return newPollQuestions;
 	}
 
 	private void listToPQA(List<String> answers, PollQuestion pollQuestion) {
@@ -155,6 +162,22 @@ public class PollServiceImpl implements PollService {
 	}
 
 	@Override
+	public Poll setQuestionsOrder(Poll poll, List<Long> qids) throws QuestionNotFoundException {
+		List<PollQuestion> pollQuestionList = qids.stream()
+				.map(pollQuestionRepository::findById)
+				.map(Optional::orElseThrow)
+				.collect(Collectors.toList());
+		Optional<PollQuestion> error = pollQuestionList.stream().filter(pq -> !poll.getQuestions().contains(pq)).findAny();
+		if (error.isPresent()) {
+			throw new QuestionNotFoundException(error.get().getId());
+		}
+		normalizeIndexes(pollQuestionList);
+		poll.setQuestions(pollQuestionList);
+		pollQuestionRepository.saveAll(pollQuestionList);
+		return pollRepository.save(poll);
+	}
+
+	@Override
 	public Page<PollSession> getPollSessionsPage(Long pid, Pageable pageable) {
 		return pollSessionRepository.getPageByPid(pid, pageable);
 	}
@@ -167,5 +190,28 @@ public class PollServiceImpl implements PollService {
 	@Override
 	public void deletePollSession(Long pid, String sid) {
 		pollSessionRepository.delete(pid, sid);
+		pollRepository.incrementLaunchedCount(pid, -1);
+	}
+
+	@Override
+	public Poll addTag(Poll poll, Tag tag) {
+		poll.getTags().add(tag);
+		return pollRepository.save(poll);
+	}
+
+	@Override
+	public Poll removeTag(Poll poll, Tag tag) {
+		if (poll.getTags().remove(tag)) {
+			tag.getPollList().remove(poll);
+			if (tag.getPollList().size() == 0) {
+				tagService.deleteTag(tag);
+			}
+		}
+		return pollRepository.save(poll);
+	}
+
+	@Override
+	public Page<Poll> getPollsByTags(List<Tag> tag, Pageable pageable) {
+		return pollRepository.getAllByTagsIn(tag, pageable);
 	}
 }

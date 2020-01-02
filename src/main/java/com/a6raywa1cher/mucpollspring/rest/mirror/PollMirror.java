@@ -20,6 +20,8 @@ public class PollMirror {
 
 	private int launchedCount;
 
+	private List<TagMirror> tags;
+
 	public static PollMirror convert(Poll poll, boolean includeQuestions) {
 		PollMirror mirror = new PollMirror();
 		mirror.setId(poll.getId());
@@ -32,6 +34,7 @@ public class PollMirror {
 				Collections.emptyList());
 		mirror.setCreator(UserMirror.convert(poll.getCreator()));
 		mirror.setLaunchedCount(poll.getLaunchedCount());
+		mirror.setTags(poll.getTags().stream().map(t -> TagMirror.convert(t, false)).collect(Collectors.toList()));
 		return mirror;
 	}
 }

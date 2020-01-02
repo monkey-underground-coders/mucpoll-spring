@@ -14,12 +14,15 @@ public class UserDetailsImpl implements UserDetails {
 	private User user;
 	private Set<GrantedAuthority> grantedAuthorities;
 
-	public UserDetailsImpl(User user, List<Long> pids) {
+	public UserDetailsImpl(User user, List<Long> pids, List<Long> tids) {
 		this.user = user;
 		grantedAuthorities = new HashSet<>();
 		grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 		pids.stream()
 				.map(PollGrantedAuthority::new)
+				.forEach(grantedAuthorities::add);
+		tids.stream()
+				.map(TagGrantedAuthority::new)
 				.forEach(grantedAuthorities::add);
 	}
 

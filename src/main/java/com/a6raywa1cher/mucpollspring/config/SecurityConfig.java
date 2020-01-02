@@ -2,6 +2,7 @@ package com.a6raywa1cher.mucpollspring.config;
 
 import com.a6raywa1cher.mucpollspring.config.security.UserDetailsServiceImpl;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
+import com.a6raywa1cher.mucpollspring.dao.repository.sql.TagRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,11 +21,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	private UserRepository userRepository;
 	private PollRepository pollRepository;
+	private TagRepository tagRepository;
 
 	@Autowired
-	public SecurityConfig(UserRepository userRepository, PollRepository pollRepository) {
+	public SecurityConfig(UserRepository userRepository, PollRepository pollRepository, TagRepository tagRepository) {
 		this.userRepository = userRepository;
 		this.pollRepository = pollRepository;
+		this.tagRepository = tagRepository;
 	}
 
 	@Bean
@@ -58,6 +61,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public UserDetailsService userDetailsService() {
-		return new UserDetailsServiceImpl(userRepository, pollRepository);
+		return new UserDetailsServiceImpl(userRepository, pollRepository, tagRepository);
 	}
 }

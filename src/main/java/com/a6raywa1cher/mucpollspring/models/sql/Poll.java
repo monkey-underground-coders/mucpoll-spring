@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -21,13 +22,17 @@ public class Poll {
 	private String name;
 
 	@OneToMany(mappedBy = "poll", cascade = CascadeType.ALL)
-	private List<PollQuestion> questions;
+	private List<PollQuestion> questions = new ArrayList<>();
 
 	@ManyToOne(optional = false, cascade = {CascadeType.PERSIST})
 	private User creator;
 
 	@Column(nullable = false, columnDefinition = "int default 0")
 	private int launchedCount;
+
+	@ManyToMany(cascade = {CascadeType.PERSIST})
+	@JoinTable
+	private List<Tag> tags = new ArrayList<>();
 
 	@Override
 	public String toString() {

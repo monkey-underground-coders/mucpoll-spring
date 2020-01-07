@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Component
 @ConfigurationProperties(prefix = "app")
@@ -14,4 +15,7 @@ import javax.validation.constraints.NotBlank;
 public class AppConfigProperties {
 	@NotBlank
 	private String historyDirectory;
+
+	@NotNull
+	private String[] corsAllowedOrigins;
 }

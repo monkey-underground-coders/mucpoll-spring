@@ -1,5 +1,7 @@
 app:
   history-directory:
+  cors-allowed-origins:
+    - "*"
 spring:
   jmx:
     default-domain: com.a6raywa1cher.mucpollspring

@@ -1,5 +1,6 @@
 package com.a6raywa1cher.mucpollspring.config;
 
+import com.a6raywa1cher.mucpollspring.config.security.CookieAuthFilter;
 import com.a6raywa1cher.mucpollspring.config.security.UserDetailsServiceImpl;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.TagRepository;
@@ -15,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -57,6 +59,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.anyRequest().authenticated()
 				.and()
 				.httpBasic();
+		http.addFilterBefore(new CookieAuthFilter(), BasicAuthenticationFilter.class);
 	}
 
 	@Override

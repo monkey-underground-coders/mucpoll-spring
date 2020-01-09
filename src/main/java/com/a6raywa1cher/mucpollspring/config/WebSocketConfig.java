@@ -13,6 +13,12 @@ import org.springframework.web.socket.server.support.HttpSessionHandshakeInterce
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	private TaskScheduler messageBrokerTaskScheduler;
+	private AppConfigProperties properties;
+
+	@Autowired
+	public WebSocketConfig(AppConfigProperties properties) {
+		this.properties = properties;
+	}
 
 	@Autowired
 	public void setMessageBrokerTaskScheduler(TaskScheduler taskScheduler) {
@@ -22,14 +28,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/poll")
+				.setAllowedOrigins(properties.getCorsAllowedOrigins())
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
 	}
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
 		registry.setApplicationDestinationPrefixes("/app");
-		registry.enableSimpleBroker("/topic");
-//				.setHeartbeatValue(new long[]{10000, 20000})
-//				.setTaskScheduler(this.messageBrokerTaskScheduler);
+		registry.enableSimpleBroker("/topic")
+				.setHeartbeatValue(new long[]{10000, 20000})
+				.setTaskScheduler(this.messageBrokerTaskScheduler);
 	}
 }

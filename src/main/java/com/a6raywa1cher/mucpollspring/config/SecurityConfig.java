@@ -17,6 +17,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -58,12 +63,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/poll").permitAll()
 				.anyRequest().authenticated()
 				.and()
-				.httpBasic();
+				.httpBasic()
+				.and()
+				.cors();
 		http.addFilterBefore(new CookieAuthFilter(), BasicAuthenticationFilter.class);
 	}
 
 	@Override
 	public UserDetailsService userDetailsService() {
 		return new UserDetailsServiceImpl(userRepository, pollRepository, tagRepository);
+	}
+
+	@Bean
+	CorsConfigurationSource corsConfigurationSource(AppConfigProperties appConfigProperties) {
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(Arrays.asList(appConfigProperties.getCorsAllowedOrigins()));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "HEAD"));
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
 	}
 }

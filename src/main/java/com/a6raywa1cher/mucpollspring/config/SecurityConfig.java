@@ -1,6 +1,8 @@
 package com.a6raywa1cher.mucpollspring.config;
 
-import com.a6raywa1cher.mucpollspring.config.security.CookieAuthFilter;
+//import com.a6raywa1cher.mucpollspring.config.security.CookieAuthFilter;
+
+import com.a6raywa1cher.mucpollspring.config.security.AuthenticationManagerImpl;
 import com.a6raywa1cher.mucpollspring.config.security.UserDetailsServiceImpl;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.TagRepository;
@@ -16,12 +18,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -29,12 +25,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	private UserRepository userRepository;
 	private PollRepository pollRepository;
 	private TagRepository tagRepository;
+	private AppConfigProperties appConfigProperties;
 
 	@Autowired
-	public SecurityConfig(UserRepository userRepository, PollRepository pollRepository, TagRepository tagRepository) {
+	public SecurityConfig(UserRepository userRepository, PollRepository pollRepository, TagRepository tagRepository,
+	                      AppConfigProperties appConfigProperties) {
 		this.userRepository = userRepository;
 		this.pollRepository = pollRepository;
 		this.tagRepository = tagRepository;
+		this.appConfigProperties = appConfigProperties;
 	}
 
 	@Bean
@@ -66,7 +65,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.httpBasic()
 				.and()
 				.cors();
-		http.addFilterBefore(new CookieAuthFilter(), BasicAuthenticationFilter.class);
+//				.configurationSource(corsConfigurationSource(appConfigProperties));
+//		http.addFilterBefore(new CookieAuthFilter(), BasicAuthenticationFilter.class);
+	}
+
+	@Bean
+	public AuthenticationManagerImpl authenticationManager(PasswordEncoder passwordEncoder) {
+		return new AuthenticationManagerImpl(userDetailsService(), passwordEncoder);
 	}
 
 	@Override
@@ -74,13 +79,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		return new UserDetailsServiceImpl(userRepository, pollRepository, tagRepository);
 	}
 
-	@Bean
-	CorsConfigurationSource corsConfigurationSource(AppConfigProperties appConfigProperties) {
-		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList(appConfigProperties.getCorsAllowedOrigins()));
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "HEAD"));
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", configuration);
-		return source;
-	}
+//	@Bean
+//	CorsConfigurationSource corsConfigurationSource(AppConfigProperties appConfigProperties) {
+//		CorsConfiguration configuration = new CorsConfiguration();
+//		configuration.setAllowedOrigins(Arrays.asList(appConfigProperties.getCorsAllowedOrigins()));
+//		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "HEAD", "OPTIONS"));
+//		configuration.setAllowedHeaders(Arrays.asList("*"));
+//		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//		source.registerCorsConfiguration("/**", configuration);
+//		return source;
+//	}
 }

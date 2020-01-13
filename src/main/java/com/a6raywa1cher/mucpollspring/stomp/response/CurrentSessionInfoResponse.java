@@ -17,11 +17,13 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class CurrentSessionInfoResponse {
 	private boolean open;
+	private boolean started;
 	private Long currentQid;
 	private JsonNode pollInfo;
 	private List<AnswerAndCurrentCount> answers;
 
 	public CurrentSessionInfoResponse(TemporaryPollSession temporaryPollSession) throws JsonProcessingException {
+		this.setStarted(temporaryPollSession.isStarted());
 		this.setCurrentQid(temporaryPollSession.getCurrentQid());
 		this.setOpen(true);
 		TemporaryPollSessionQuestion question = temporaryPollSession.getQuestions().stream()
@@ -35,6 +37,7 @@ public class CurrentSessionInfoResponse {
 
 	public CurrentSessionInfoResponse(PollSession pollSession) {
 		open = false;
+		started = false;
 		currentQid = null;
 		pollInfo = null;
 		answers = Collections.emptyList();

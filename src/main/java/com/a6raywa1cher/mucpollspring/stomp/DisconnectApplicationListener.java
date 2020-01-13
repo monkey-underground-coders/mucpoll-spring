@@ -46,14 +46,14 @@ public class DisconnectApplicationListener implements ApplicationListener<Sessio
 	@Transactional
 	public void onApplicationEvent(SessionDisconnectEvent event) {
 		String name = (event.getUser() == null ? "unknown" : event.getUser().getName());
-		log.debug("User disconnected, username: " + name);
+		log.debug("User disconnected, username:{}, simpSessionid:{}", name, event.getSessionId());
 		if (!check(event)) {
 			return;
 		}
 		assert event.getUser() != null;
-		log.info("Starting closing votes for username " + name);
+		log.info("Starting closing votes for username:{}, simpSessionid:{}", name, event.getSessionId());
 		try {
-			List<PollSession> pollSessions = votingService.closeAllVotesByUser(name);
+			List<PollSession> pollSessions = votingService.closeAllVotesBySimpSessionId(name);
 			for (PollSession ps : pollSessions) {
 				try {
 					pollService.incrementLaunchedCount(ps.getPid(), 1);

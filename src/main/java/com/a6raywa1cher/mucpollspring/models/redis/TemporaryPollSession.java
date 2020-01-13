@@ -24,6 +24,8 @@ public class TemporaryPollSession {
 	private Long currentQid;
 	private List<TemporaryPollSessionQuestion> questions;
 	private String pollSerialized;
+	private boolean started;
+	private String simpSessionId;
 
 	public void serializePoll(Poll poll) throws IOException {
 		pollSerialized = new ObjectMapper().writeValueAsString(poll);

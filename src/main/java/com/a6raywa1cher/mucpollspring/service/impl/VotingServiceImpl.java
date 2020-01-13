@@ -11,7 +11,6 @@ import com.a6raywa1cher.mucpollspring.models.redis.TemporaryPollSessionQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.Poll;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestionAnswer;
-import com.a6raywa1cher.mucpollspring.models.sql.User;
 import com.a6raywa1cher.mucpollspring.service.exceptions.AnswerNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.exceptions.QuestionNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.exceptions.TemporaryPollSessionNotFound;
@@ -50,7 +49,7 @@ public class VotingServiceImpl implements VotingService {
 	@Override
 	@Transactional
 	@SneakyThrows
-	public TemporaryPollSession createNewTemporaryPollSession(Poll poll, long uid) {
+	public TemporaryPollSession createNewTemporaryPollSession(Poll poll, long uid, String simpSessionId) {
 		if (poll.getQuestions().size() == 0) {
 			return null;
 		}
@@ -61,6 +60,7 @@ public class VotingServiceImpl implements VotingService {
 				.min(Comparator.comparingInt(PollQuestion::getIndex))
 				.get().getId());
 		temporaryPollSession.setCreatedAt(LocalDateTime.now());
+		temporaryPollSession.setSimpSessionId(simpSessionId);
 		temporaryPollSession.serializePoll(poll);
 		temporaryPollSession.setQuestions(poll.getQuestions().stream()
 				.sorted(Comparator.comparingInt(PollQuestion::getIndex))
@@ -81,6 +81,17 @@ public class VotingServiceImpl implements VotingService {
 				.collect(Collectors.toList()));
 		TemporaryPollSession save = temporaryPollSessionRepository.save(temporaryPollSession);
 		return save;
+	}
+
+	@Override
+	public TemporaryPollSession start(String sid) throws TemporaryPollSessionNotFound {
+		Optional<TemporaryPollSession> temporaryPollSession = temporaryPollSessionRepository.findById(sid);
+		if (temporaryPollSession.isEmpty()) {
+			throw new TemporaryPollSessionNotFound(sid);
+		}
+		TemporaryPollSession tps = temporaryPollSession.get();
+		tps.setStarted(true);
+		return temporaryPollSessionRepository.save(tps);
 	}
 
 	@Override
@@ -150,11 +161,20 @@ public class VotingServiceImpl implements VotingService {
 
 	}
 
+//	@Override
+//	@Transactional
+//	public List<PollSession> closeAllVotesByUser(String username) {
+//		User user = userRepository.getByUsername(username).orElseThrow();
+//		return temporaryPollSessionRepository.getAllByUid(user.getId()).stream()
+//				.map(this::closeVote)
+//				.filter(Objects::nonNull)
+//				.collect(Collectors.toList());
+//	}
+
+
 	@Override
-	@Transactional
-	public List<PollSession> closeAllVotesByUser(String username) {
-		User user = userRepository.getByUsername(username).orElseThrow();
-		return temporaryPollSessionRepository.getAllByUid(user.getId()).stream()
+	public List<PollSession> closeAllVotesBySimpSessionId(String simpSessionId) {
+		return temporaryPollSessionRepository.getAllBySimpSessionId(simpSessionId).stream()
 				.map(this::closeVote)
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());

@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface TemporaryPollSessionRepository extends CrudRepository<TemporaryPollSession, String> {
 	List<TemporaryPollSession> getAllByUid(long uid);
+
+	List<TemporaryPollSession> getAllBySimpSessionId(String simpSessionId);
 }

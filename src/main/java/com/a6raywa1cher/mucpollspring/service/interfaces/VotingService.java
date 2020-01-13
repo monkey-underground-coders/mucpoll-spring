@@ -13,7 +13,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VotingService {
-	TemporaryPollSession createNewTemporaryPollSession(Poll poll, long uid);
+	TemporaryPollSession createNewTemporaryPollSession(Poll poll, long uid, String simpSessionId);
+
+	TemporaryPollSession start(String sid) throws TemporaryPollSessionNotFound;
 
 	AnswerAndCount appendVote(String sid, Long aid) throws TemporaryPollSessionNotFound, AnswerNotFoundException;
 
@@ -26,5 +28,6 @@ public interface VotingService {
 	@Transactional
 	PollSession closeVote(TemporaryPollSession tps);
 
-	List<PollSession> closeAllVotesByUser(String username);
+	//	List<PollSession> closeAllVotesByUser(String username);
+	List<PollSession> closeAllVotesBySimpSessionId(String simpSessionId);
 }

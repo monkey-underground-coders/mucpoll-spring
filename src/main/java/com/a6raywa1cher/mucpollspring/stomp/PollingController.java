@@ -16,10 +16,7 @@ import com.a6raywa1cher.mucpollspring.stomp.response.OpenVotingSessionResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.handler.annotation.*;
 import org.springframework.stereotype.Controller;
 
 import javax.transaction.Transactional;
@@ -80,7 +77,9 @@ public class PollingController {
 	@MessageMapping("/polladmin/{pid}/openvote")
 	@SendTo("/topic/{pid}")
 	@Transactional
-	public OpenVotingSessionResponse openVotingSession(@DestinationVariable("pid") Long pid, Principal principal) {
+	public OpenVotingSessionResponse openVotingSession(@DestinationVariable("pid") Long pid,
+	                                                   @Header("simpSessionId") String sessionId,
+	                                                   Principal principal) {
 		Optional<Poll> poll = pollService.getById(pid);
 		if (poll.isEmpty()) {
 			return new OpenVotingSessionResponse();
@@ -88,11 +87,34 @@ public class PollingController {
 		if (!poll.get().getCreator().getUsername().equals(principal.getName())) {
 			throw new ForbiddenException();
 		}
-		TemporaryPollSession temporaryPollSession = votingService.createNewTemporaryPollSession(poll.get(),
-				poll.get().getCreator().getId());
+		TemporaryPollSession temporaryPollSession = votingService.createNewTemporaryPollSession(
+				poll.get(),
+				poll.get().getCreator().getId(),
+				sessionId);
 		OpenVotingSessionResponse openVotingSessionResponse = new OpenVotingSessionResponse();
 		openVotingSessionResponse.setSid(temporaryPollSession.getId());
 		return openVotingSessionResponse;
+	}
+
+	@MessageMapping("/polladmin/{pid}/{sid}/start")
+	@SendTo("/topic/{pid}/{sid}")
+	public CurrentSessionInfoResponse start(@DestinationVariable("pid") Long pid,
+	                                        @DestinationVariable("sid") String sid,
+	                                        Principal principal) throws IOException {
+		Optional<TemporaryPollSession> temporaryPollSession = votingService.getBySid(sid);
+		if (temporaryPollSession.isEmpty()) {
+			return null;
+		}
+		Poll poll = temporaryPollSession.get().deserializePoll();
+		if (!poll.getCreator().getUsername().equals(principal.getName())) {
+			throw new ForbiddenException();
+		}
+		try {
+			TemporaryPollSession updated = votingService.start(sid);
+			return new CurrentSessionInfoResponse(updated);
+		} catch (TemporaryPollSessionNotFound temporaryPollSessionNotFound) {
+			return null;
+		}
 	}
 
 	@MessageMapping("/polladmin/{pid}/{sid}/change_question")

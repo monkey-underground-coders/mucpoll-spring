@@ -3,6 +3,7 @@ package com.a6raywa1cher.mucpollspring.service.impl;
 import com.a6raywa1cher.mucpollspring.dao.repository.file.PollSessionRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.redis.AnswerAndCountRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.redis.TemporaryPollSessionRepository;
+import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.UserRepository;
 import com.a6raywa1cher.mucpollspring.models.file.PollSession;
 import com.a6raywa1cher.mucpollspring.models.redis.AnswerAndCount;
@@ -34,16 +35,18 @@ public class VotingServiceImpl implements VotingService {
 	private AnswerAndCountRepository answerAndCountRepository;
 	private PollSessionRepository pollSessionRepository;
 	private UserRepository userRepository;
+	private PollRepository pollRepository;
 
 	@Autowired
 	public VotingServiceImpl(TemporaryPollSessionRepository temporaryPollSessionRepository,
 	                         AnswerAndCountRepository answerAndCountRepository,
 	                         PollSessionRepository pollSessionRepository,
-	                         UserRepository userRepository) {
+	                         UserRepository userRepository, PollRepository pollRepository) {
 		this.temporaryPollSessionRepository = temporaryPollSessionRepository;
 		this.answerAndCountRepository = answerAndCountRepository;
 		this.pollSessionRepository = pollSessionRepository;
 		this.userRepository = userRepository;
+		this.pollRepository = pollRepository;
 	}
 
 	@Override
@@ -152,6 +155,7 @@ public class VotingServiceImpl implements VotingService {
 				.anyMatch(l -> l > 0);
 		if (isAnyVoteDetected) {
 			PollSession pollSession = pollSessionRepository.save(new PollSession(tps, poll));
+			pollRepository.incrementLaunchedCount(poll, 1);
 			temporaryPollSessionRepository.delete(tps);
 			return pollSession;
 		} else {

@@ -56,7 +56,6 @@ public class DisconnectApplicationListener implements ApplicationListener<Sessio
 			List<PollSession> pollSessions = votingService.closeAllVotesBySimpSessionId(name);
 			for (PollSession ps : pollSessions) {
 				try {
-					pollService.incrementLaunchedCount(ps.getPid(), 1);
 					template.convertAndSend(String.format("/topic/%d/%s", ps.getPid(), ps.getSid()),
 							new CurrentSessionInfoResponse(ps));
 				} catch (Exception e) {

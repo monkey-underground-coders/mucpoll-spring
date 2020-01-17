@@ -5,6 +5,7 @@ import com.a6raywa1cher.mucpollspring.models.sql.Poll;
 import com.a6raywa1cher.mucpollspring.models.sql.PollQuestion;
 import com.a6raywa1cher.mucpollspring.models.sql.Tag;
 import com.a6raywa1cher.mucpollspring.rest.exception.PollNotFoundException;
+import com.a6raywa1cher.mucpollspring.rest.exception.PollQuestionNotFoundException;
 import com.a6raywa1cher.mucpollspring.rest.exception.TagNotFoundException;
 import com.a6raywa1cher.mucpollspring.rest.mirror.PollMirror;
 import com.a6raywa1cher.mucpollspring.rest.request.*;
@@ -23,6 +24,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,17 +70,22 @@ public class PollController {
 
 	@PutMapping("/{pid:[0-9]+}/question")
 	@PreAuthorize("@mvcAccessChecker.checkPid(authentication,#pid)")
-	public ResponseEntity<PollMirror> editQuestion(@PathVariable long pid, @RequestBody @Valid EditPollQuestionRequest dto) {
+	@Transactional(rollbackOn = PollQuestionNotFoundException.class)
+	public ResponseEntity<PollMirror> editQuestion(@PathVariable long pid,
+	                                               @RequestBody @Valid List<EditPollQuestionRequest> dto)
+			throws PollQuestionNotFoundException {
 		Poll poll = $getPoll(pid);
-		Optional<PollQuestion> optionalPollQuestion = poll.getQuestions().stream()
-				.filter(q -> q.getId().equals(dto.getQid()))
-				.findAny();
-		if (optionalPollQuestion.isEmpty()) {
-			return ResponseEntity.badRequest().build();
+		for (EditPollQuestionRequest req : dto) {
+			Optional<PollQuestion> optionalPollQuestion = poll.getQuestions().stream()
+					.filter(q -> q.getId().equals(req.getQid()))
+					.findAny();
+			if (optionalPollQuestion.isEmpty()) {
+				throw new PollQuestionNotFoundException();
+			}
+			PollQuestion pollQuestion = optionalPollQuestion.get();
+			pollService.editQuestion(pollQuestion, req.getTitle(), req.getIndex(), req.getAnswers());
 		}
-		PollQuestion pollQuestion = optionalPollQuestion.get();
-		PollQuestion updated = pollService.editQuestion(pollQuestion, dto.getTitle(), dto.getIndex(), dto.getAnswers());
-		return ResponseEntity.ok(PollMirror.convert(updated.getPoll(), true));
+		return ResponseEntity.ok(PollMirror.convert($getPoll(pid), true));
 	}
 
 	@DeleteMapping("/{pid:[0-9]+}/question")

@@ -1,0 +1,9 @@
+package com.a6raywa1cher.mucpollspring.rest.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "Invalid QID")
+public class PollQuestionNotFoundException extends Exception {
+
+}

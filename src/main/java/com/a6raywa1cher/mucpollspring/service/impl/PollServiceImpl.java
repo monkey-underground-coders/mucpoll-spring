@@ -16,7 +16,9 @@ import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -62,8 +64,23 @@ public class PollServiceImpl implements PollService {
 	}
 
 	@Override
+	@org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+	public void reconstructPoll(Poll poll, String title, List<Pair<String, List<String>>> list, List<Tag> tags) {
+		poll = this.deleteAllQuestions(poll);
+		poll = this.addQuestions(poll, list);
+		poll.setName(title);
+		poll = this.removeAllTags(poll);
+		for (Tag tag : tags) {
+			poll = this.addTag(poll, tag);
+		}
+		pollRepository.save(poll);
+	}
+
+	@Override
+//	@org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
 	public Optional<Poll> getById(Long id) {
-		return pollRepository.findById(id);
+		Optional<Poll> byId = pollRepository.findById(id);
+		return byId;
 	}
 
 	@Override
@@ -91,12 +108,12 @@ public class PollServiceImpl implements PollService {
 
 	@Override
 	@Transactional
-	public List<PollQuestion> addQuestions(Poll poll, Map<String, List<String>> titleAndAnswers) {
+	public Poll addQuestions(Poll poll, List<Pair<String, List<String>>> titleAndAnswers) {
 		List<PollQuestion> newPollQuestions = new ArrayList<>(titleAndAnswers.size());
 		int index = pollQuestionRepository.getMaxIndex(poll).orElse(-1) + 1;
-		for (Map.Entry<String, List<String>> entry : titleAndAnswers.entrySet()) {
-			String title = entry.getKey();
-			List<String> answers = entry.getValue();
+		for (Pair<String, List<String>> entry : titleAndAnswers) {
+			String title = entry.getFirst();
+			List<String> answers = entry.getSecond();
 			PollQuestion pollQuestion = new PollQuestion();
 			pollQuestion.setPoll(poll);
 			pollQuestion.setQuestion(title);
@@ -105,8 +122,7 @@ public class PollServiceImpl implements PollService {
 			newPollQuestions.add(pollQuestion);
 		}
 		pollQuestionRepository.saveAll(newPollQuestions);
-		pollRepository.save(poll);
-		return newPollQuestions;
+		return pollRepository.save(poll);
 	}
 
 	private void listToPQA(List<String> answers, PollQuestion pollQuestion) {
@@ -162,6 +178,14 @@ public class PollServiceImpl implements PollService {
 	}
 
 	@Override
+	@Transactional
+	public Poll deleteAllQuestions(Poll poll) {
+		pollQuestionRepository.deleteAll(poll.getQuestions());
+		poll.getQuestions().clear();
+		return pollRepository.save(poll);
+	}
+
+	@Override
 	public Poll setQuestionsOrder(Poll poll, List<Long> qids) throws QuestionNotFoundException {
 		List<PollQuestion> pollQuestionList = qids.stream()
 				.map(pollQuestionRepository::findById)
@@ -205,6 +229,19 @@ public class PollServiceImpl implements PollService {
 			tag.getPollList().remove(poll);
 			if (tag.getPollList().size() == 0) {
 				tagService.deleteTag(tag);
+			}
+		}
+		return pollRepository.save(poll);
+	}
+
+	@Override
+	public Poll removeAllTags(Poll poll) {
+		for (Tag tag : poll.getTags()) {
+			if (poll.getTags().remove(tag)) {
+				tag.getPollList().remove(poll);
+				if (tag.getPollList().size() == 0) {
+					tagService.deleteTag(tag);
+				}
 			}
 		}
 		return pollRepository.save(poll);

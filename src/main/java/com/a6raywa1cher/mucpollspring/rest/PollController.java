@@ -16,6 +16,7 @@ import com.a6raywa1cher.mucpollspring.service.interfaces.UserService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -62,10 +63,11 @@ public class PollController {
 	@PreAuthorize("@mvcAccessChecker.checkPid(authentication,#pid)")
 	public ResponseEntity<PollMirror> addQuestion(@PathVariable long pid, @RequestBody @Valid List<CreatePollQuestionRequest> dto) {
 		Poll poll = $getPoll(pid);
-		List<PollQuestion> pollQuestion = pollService.addQuestions(poll, dto.stream()
-				.collect(Collectors.toMap(CreatePollQuestionRequest::getTitle, CreatePollQuestionRequest::getAnswers))
+		Poll updated = pollService.addQuestions(poll, dto.stream()
+				.map(cpqr -> Pair.of(cpqr.getTitle(), cpqr.getAnswers()))
+				.collect(Collectors.toList())
 		);
-		return ResponseEntity.ok(PollMirror.convert(pollQuestion.stream().findAny().orElseThrow().getPoll(), true));
+		return ResponseEntity.ok(PollMirror.convert(updated, true));
 	}
 
 	@PutMapping("/{pid:[0-9]+}/question")
@@ -162,7 +164,21 @@ public class PollController {
 
 	@PutMapping("/{pid:[0-9]+}")
 	@PreAuthorize("@mvcAccessChecker.checkPid(authentication,#pid)")
-	public ResponseEntity<PollMirror> editPoll(@PathVariable long pid, @RequestBody EditPollRequest dto) {
+	public ResponseEntity<Void> reconstructPoll(@PathVariable long pid,
+	                                            @RequestBody @Valid ReconstructPollRequest dto) {
+		Poll poll = $getPoll(pid);
+		pollService.reconstructPoll(poll, poll.getName(), dto.getList().stream()
+				.map(cpqr -> Pair.of(cpqr.getTitle(), cpqr.getAnswers()))
+				.collect(Collectors.toList()), dto.getTags().stream()
+				.map(tid -> tagService.getById(tid).orElseThrow(TagNotFoundException::new))
+				.collect(Collectors.toList())
+		);
+		return ResponseEntity.ok().build(); //TODO: fix bug
+	}
+
+	@PatchMapping("/{pid:[0-9]+}")
+	@PreAuthorize("@mvcAccessChecker.checkPid(authentication,#pid)")
+	public ResponseEntity<PollMirror> editPoll(@PathVariable long pid, @RequestBody @Valid EditPollRequest dto) {
 		Poll poll = $getPoll(pid);
 		return ResponseEntity.ok(PollMirror.convert(pollService.editPoll(poll, dto.getName()), true));
 	}

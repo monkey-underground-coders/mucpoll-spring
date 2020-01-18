@@ -18,9 +18,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,20 +55,23 @@ public class PollServiceImpl implements PollService {
 		poll.setName(name);
 		poll.setQuestions(Collections.emptyList());
 		poll.setCreator(optionalUser.get());
+		poll.setLaunchedCount(0);
+		poll.setTags(Collections.emptyList());
+		poll.setCreatedAt(LocalDateTime.now());
 		return pollRepository.save(poll);
 	}
 
 	@Override
-	public List<Poll> getPollsByUser(Long userId, Pageable pageable) {
+	public Page<Poll> getPollsByUser(Long userId, Pageable pageable) {
 		return pollRepository.getAllByCreatorId(userId, pageable);
 	}
 
 	@Override
-	@org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+	@Transactional(rollbackOn = Exception.class)
 	public void reconstructPoll(Poll poll, String title, List<Pair<String, List<String>>> list, List<Tag> tags) {
+		poll = this.editPoll(poll, title);
 		poll = this.deleteAllQuestions(poll);
 		poll = this.addQuestions(poll, list);
-		poll.setName(title);
 		poll = this.removeAllTags(poll);
 		for (Tag tag : tags) {
 			poll = this.addTag(poll, tag);
@@ -78,12 +81,14 @@ public class PollServiceImpl implements PollService {
 
 	@Override
 //	@org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+	@Transactional
 	public Optional<Poll> getById(Long id) {
 		Optional<Poll> byId = pollRepository.findById(id);
 		return byId;
 	}
 
 	@Override
+	@Transactional
 	public Poll editPoll(Poll poll, String name) {
 		poll.setName(name);
 		return pollRepository.save(poll);
@@ -218,6 +223,7 @@ public class PollServiceImpl implements PollService {
 	}
 
 	@Override
+	@Transactional
 	public Poll addTag(Poll poll, Tag tag) {
 		poll.getTags().add(tag);
 		return pollRepository.save(poll);
@@ -235,6 +241,7 @@ public class PollServiceImpl implements PollService {
 	}
 
 	@Override
+	@Transactional
 	public Poll removeAllTags(Poll poll) {
 		for (Tag tag : poll.getTags()) {
 			if (poll.getTags().remove(tag)) {

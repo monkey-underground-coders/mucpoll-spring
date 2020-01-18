@@ -1,8 +1,10 @@
 package com.a6raywa1cher.mucpollspring.rest.mirror;
 
 import com.a6raywa1cher.mucpollspring.models.sql.Poll;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -22,6 +24,9 @@ public class PollMirror {
 
 	private List<TagMirror> tags;
 
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private LocalDateTime createdAt;
+
 	public static PollMirror convert(Poll poll, boolean includeQuestions) {
 		PollMirror mirror = new PollMirror();
 		mirror.setId(poll.getId());
@@ -35,6 +40,7 @@ public class PollMirror {
 		mirror.setCreator(UserMirror.convert(poll.getCreator()));
 		mirror.setLaunchedCount(poll.getLaunchedCount());
 		mirror.setTags(poll.getTags().stream().map(t -> TagMirror.convert(t, false)).collect(Collectors.toList()));
+		mirror.setCreatedAt(poll.getCreatedAt());
 		return mirror;
 	}
 }

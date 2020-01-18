@@ -15,6 +15,8 @@ import com.a6raywa1cher.mucpollspring.service.interfaces.TagService;
 import com.a6raywa1cher.mucpollspring.service.interfaces.UserService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
@@ -117,19 +119,22 @@ public class PollController {
 	}
 
 	@GetMapping("/polls")
-	public ResponseEntity<List<PollMirror>> getPolls(Pageable pageable) {
-		return ResponseEntity.ok(pollService.getPollsByUser(userService.getByUsername(getUserDetails().getUsername()).orElseThrow().getId(), pageable)
-				.stream()
-				.map(p -> PollMirror.convert(p, true))
-				.collect(Collectors.toList())
+	public ResponseEntity<Page<PollMirror>> getPolls(Pageable pageable) {
+		long uid = userService.getByUsername(getUserDetails().getUsername()).orElseThrow().getId();
+		Page<Poll> polls = pollService.getPollsByUser(uid, pageable);
+		Page<PollMirror> pollMirrors = new PageImpl<>(
+				polls.stream().map(p -> PollMirror.convert(p, true)).collect(Collectors.toList()),
+				polls.getPageable(),
+				polls.getTotalElements()
 		);
+		return ResponseEntity.ok(pollMirrors);
 	}
 
 	@GetMapping("/{pid:[0-9]+}/history")
 	@PreAuthorize("@mvcAccessChecker.checkPid(authentication,#pid)")
-	public ResponseEntity<List<PollSession>> getHistory(@PathVariable long pid, Pageable pageable) {
+	public ResponseEntity<Page<PollSession>> getHistory(@PathVariable long pid, Pageable pageable) {
 		$getPoll(pid);
-		return ResponseEntity.ok(pollService.getPollSessionsPage(pid, pageable).toList());
+		return ResponseEntity.ok(pollService.getPollSessionsPage(pid, pageable));
 	}
 
 	@GetMapping("/{pid:[0-9]+}/history/{sid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}")
@@ -167,11 +172,13 @@ public class PollController {
 	public ResponseEntity<Void> reconstructPoll(@PathVariable long pid,
 	                                            @RequestBody @Valid ReconstructPollRequest dto) {
 		Poll poll = $getPoll(pid);
-		pollService.reconstructPoll(poll, poll.getName(), dto.getList().stream()
-				.map(cpqr -> Pair.of(cpqr.getTitle(), cpqr.getAnswers()))
-				.collect(Collectors.toList()), dto.getTags().stream()
-				.map(tid -> tagService.getById(tid).orElseThrow(TagNotFoundException::new))
-				.collect(Collectors.toList())
+		pollService.reconstructPoll(poll, dto.getName(),
+				dto.getList().stream()
+						.map(cpqr -> Pair.of(cpqr.getTitle(), cpqr.getAnswers()))
+						.collect(Collectors.toList()),
+				dto.getTags().stream()
+						.map(tid -> tagService.getById(tid).orElseThrow(TagNotFoundException::new))
+						.collect(Collectors.toList())
 		);
 		return ResponseEntity.ok().build(); //TODO: fix bug
 	}
@@ -192,7 +199,7 @@ public class PollController {
 	}
 
 	@PostMapping("/tags")
-	public ResponseEntity<List<PollMirror>> getPageByTags(Pageable pageable, @RequestBody @Valid List<Long> tids) {
+	public ResponseEntity<Page<PollMirror>> getPageByTags(Pageable pageable, @RequestBody @Valid List<Long> tids) {
 		List<Tag> tags = new ArrayList<>(tids.size());
 		for (long tid : tids) {
 			Tag tag = $getTag(tid);
@@ -201,10 +208,14 @@ public class PollController {
 			}
 			tags.add(tag);
 		}
-		return ResponseEntity.ok(pollService.getPollsByTags(tags, pageable).stream()
+		Page<Poll> polls = pollService.getPollsByTags(tags, pageable);
+		Page<PollMirror> pollMirrors = new PageImpl<>(polls.stream()
 				.map(p -> PollMirror.convert(p, false))
-				.collect(Collectors.toList())
+				.collect(Collectors.toList()),
+				polls.getPageable(),
+				polls.getTotalElements()
 		);
+		return ResponseEntity.ok(pollMirrors);
 	}
 
 	private Poll $getPoll(long pid) {

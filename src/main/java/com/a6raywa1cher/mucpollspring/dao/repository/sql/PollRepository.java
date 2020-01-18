@@ -16,7 +16,7 @@ import java.util.List;
 public interface PollRepository extends PagingAndSortingRepository<Poll, Long> {
 	List<Poll> getAllByCreatorId(Long creator_id);
 
-	List<Poll> getAllByCreatorId(Long creator_id, Pageable pageable);
+	Page<Poll> getAllByCreatorId(Long creator_id, Pageable pageable);
 
 	@Modifying
 	@Query("update Poll p set p.launchedCount = p.launchedCount + :#{#delta} where p.id = :#{#poll.id}")

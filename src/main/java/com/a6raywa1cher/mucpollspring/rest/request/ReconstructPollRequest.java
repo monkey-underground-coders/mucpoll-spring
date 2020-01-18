@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import java.util.List;
@@ -15,7 +16,9 @@ public class ReconstructPollRequest {
 	private String name;
 
 	@Valid
-	private List<QuestionAndAnswers> list;
+	@NotNull
+	@Size(min = 1, max = 255)
+	private List<@Valid QuestionAndAnswers> list;
 
 	@Valid
 	@Size(max = 255)
@@ -28,6 +31,7 @@ public class ReconstructPollRequest {
 		private String title;
 
 		@Valid
+		@NotNull
 		@Size(min = 1, max = 50)
 		private List<@NotBlank @Size(max = 255) String> answers;
 	}

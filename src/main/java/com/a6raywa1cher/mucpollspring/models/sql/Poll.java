@@ -1,10 +1,12 @@
 package com.a6raywa1cher.mucpollspring.models.sql;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +36,10 @@ public class Poll {
 	@JoinTable
 	private List<Tag> tags = new ArrayList<>();
 
+	@Column
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private LocalDateTime createdAt;
+
 	@Override
 	public String toString() {
 		return "Poll{" +
@@ -44,6 +50,12 @@ public class Poll {
 				.map(l -> Long.toString(l))
 				.reduce((a, b) -> a + ',' + b).orElse("") + ']' +
 				", creator=" + (creator != null ? creator.getId() : null) +
+				", launchedCount=" + launchedCount +
+				", tags=[" + tags.stream()
+				.map(Tag::getId)
+				.map(l -> Long.toString(l))
+				.reduce((a, b) -> a + ',' + b).orElse("") + ']' +
+				", createdAt=" + (createdAt == null ? "unknown" : createdAt.toString()) +
 				'}';
 	}
 }

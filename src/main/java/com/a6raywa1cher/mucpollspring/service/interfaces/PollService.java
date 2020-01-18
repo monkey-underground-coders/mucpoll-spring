@@ -17,7 +17,7 @@ import java.util.Optional;
 public interface PollService {
 	Poll createNewPoll(Long userId, String name) throws UserNotFoundException;
 
-	List<Poll> getPollsByUser(Long userId, Pageable pageable);
+	Page<Poll> getPollsByUser(Long userId, Pageable pageable);
 
 	void reconstructPoll(Poll poll, String title, List<Pair<String, List<String>>> list, List<Tag> tags);
 

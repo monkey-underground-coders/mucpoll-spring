@@ -2,6 +2,8 @@ package com.a6raywa1cher.mucpollspring.models.redis;
 
 import com.a6raywa1cher.mucpollspring.models.sql.Poll;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
@@ -28,10 +30,16 @@ public class TemporaryPollSession {
 	private String simpSessionId;
 
 	public void serializePoll(Poll poll) throws IOException {
-		pollSerialized = new ObjectMapper().writeValueAsString(poll);
+		pollSerialized = new ObjectMapper()
+				.registerModule(new Jdk8Module())
+				.registerModule(new JavaTimeModule())
+				.writeValueAsString(poll);
 	}
 
 	public Poll deserializePoll() throws IOException {
-		return new ObjectMapper().readValue(pollSerialized, Poll.class);
+		return new ObjectMapper()
+				.registerModule(new Jdk8Module())
+				.registerModule(new JavaTimeModule())
+				.readValue(pollSerialized, Poll.class);
 	}
 }

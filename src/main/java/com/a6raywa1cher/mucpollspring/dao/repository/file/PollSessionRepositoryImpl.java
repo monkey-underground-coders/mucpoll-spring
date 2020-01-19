@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -92,9 +93,10 @@ public class PollSessionRepositoryImpl implements PollSessionRepository {
 		Sort.Order order = pageable.getSort().getOrderFor("recordedAt");
 		Comparator<Path> pathComparator = (order != null && order.getDirection().isAscending()) ?
 				Comparator.naturalOrder() : Comparator.reverseOrder();
-
+		AtomicLong total = new AtomicLong(0L);
 		return new PageImpl<>(Files.list(pathToPoll)
 				.filter(p -> uuid.matcher(p.getFileName().toString()).matches())
+				.peek(p -> total.getAndIncrement())
 				.sorted(Comparator.comparingLong(p -> p.toFile().lastModified()))
 				.sorted(pathComparator)
 				.skip(pageable.getOffset())
@@ -108,7 +110,9 @@ public class PollSessionRepositoryImpl implements PollSessionRepository {
 					}
 				})
 				.filter(Objects::nonNull)
-				.collect(Collectors.toList())
+				.collect(Collectors.toList()),
+				pageable,
+				total.get()
 		);
 	}
 

@@ -16,6 +16,7 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Component
 public class DisconnectApplicationListener implements ApplicationListener<SessionDisconnectEvent> {
@@ -46,14 +47,18 @@ public class DisconnectApplicationListener implements ApplicationListener<Sessio
 	@Transactional
 	public void onApplicationEvent(SessionDisconnectEvent event) {
 		String name = (event.getUser() == null ? "unknown" : event.getUser().getName());
-		log.debug("User disconnected, username:{}, simpSessionid:{}", name, event.getSessionId());
+		String simpSessionId = event.getSessionId();
+		log.debug("User disconnected, username:{}, simpSessionid:{}", name, simpSessionId);
 		if (!check(event)) {
 			return;
 		}
 		assert event.getUser() != null;
-		log.info("Starting closing votes for username:{}, simpSessionid:{}", name, event.getSessionId());
+		log.info("Starting closing votes for username:{}, simpSessionid:{}", name, simpSessionId);
 		try {
-			List<PollSession> pollSessions = votingService.closeAllVotesBySimpSessionId(name);
+			List<PollSession> pollSessions = votingService.closeAllVotesBySimpSessionId(simpSessionId);
+			log.info("simpSessionId:{} connected with these pollSessions:{}", simpSessionId, pollSessions.stream()
+					.map(PollSession::getSid)
+					.collect(Collectors.joining(",")));
 			for (PollSession ps : pollSessions) {
 				try {
 					template.convertAndSend(String.format("/topic/%d/%s", ps.getPid(), ps.getSid()),

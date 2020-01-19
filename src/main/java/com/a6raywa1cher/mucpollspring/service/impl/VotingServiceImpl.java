@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -51,10 +52,9 @@ public class VotingServiceImpl implements VotingService {
 
 	@Override
 	@Transactional
-	@SneakyThrows
 	public TemporaryPollSession createNewTemporaryPollSession(Poll poll, long uid, String simpSessionId) {
 		if (poll.getQuestions().size() == 0) {
-			return null;
+			throw new RuntimeException("Empty poll");
 		}
 		TemporaryPollSession temporaryPollSession = new TemporaryPollSession();
 		temporaryPollSession.setPid(poll.getId());
@@ -64,7 +64,11 @@ public class VotingServiceImpl implements VotingService {
 				.get().getId());
 		temporaryPollSession.setCreatedAt(LocalDateTime.now());
 		temporaryPollSession.setSimpSessionId(simpSessionId);
-		temporaryPollSession.serializePoll(poll);
+		try {
+			temporaryPollSession.serializePoll(poll);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 		temporaryPollSession.setQuestions(poll.getQuestions().stream()
 				.sorted(Comparator.comparingInt(PollQuestion::getIndex))
 				.map(pq -> {
@@ -178,7 +182,8 @@ public class VotingServiceImpl implements VotingService {
 
 	@Override
 	public List<PollSession> closeAllVotesBySimpSessionId(String simpSessionId) {
-		return temporaryPollSessionRepository.getAllBySimpSessionId(simpSessionId).stream()
+		List<TemporaryPollSession> bySimpSessionId = temporaryPollSessionRepository.getAllBySimpSessionId(simpSessionId);
+		return bySimpSessionId.stream()
 				.map(this::closeVote)
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());

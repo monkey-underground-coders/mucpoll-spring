@@ -27,6 +27,7 @@ public class TemporaryPollSession {
 	private List<TemporaryPollSessionQuestion> questions;
 	private String pollSerialized;
 	private boolean started;
+	@Indexed
 	private String simpSessionId;
 
 	public void serializePoll(Poll poll) throws IOException {

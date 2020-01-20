@@ -31,7 +31,6 @@ public class UserController {
 	}
 
 	@GetMapping("/cookies")
-//	@Secured("ROLE_USER")
 	public ResponseEntity<String> safeZone() {
 		return ResponseEntity.ok("COOKIES!");
 	}

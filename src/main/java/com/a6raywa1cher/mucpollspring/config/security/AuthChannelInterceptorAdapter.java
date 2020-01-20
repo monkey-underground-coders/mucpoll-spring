@@ -15,8 +15,6 @@ import org.springframework.stereotype.Component;
 // https://stackoverflow.com/questions/45405332/websocket-authentication-and-authorization-in-spring
 @Component
 public class AuthChannelInterceptorAdapter implements ChannelInterceptor {
-	private static final String USERNAME_HEADER = "login";
-	private static final String PASSWORD_HEADER = "passcode";
 	private final AuthenticationManagerImpl authenticationManager;
 
 	@Autowired

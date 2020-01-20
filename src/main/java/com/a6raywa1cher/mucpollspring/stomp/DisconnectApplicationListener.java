@@ -1,7 +1,6 @@
 package com.a6raywa1cher.mucpollspring.stomp;
 
 import com.a6raywa1cher.mucpollspring.models.file.PollSession;
-import com.a6raywa1cher.mucpollspring.service.interfaces.PollService;
 import com.a6raywa1cher.mucpollspring.service.interfaces.VotingService;
 import com.a6raywa1cher.mucpollspring.stomp.response.CurrentSessionInfoResponse;
 import org.slf4j.Logger;
@@ -23,14 +22,11 @@ public class DisconnectApplicationListener implements ApplicationListener<Sessio
 	private static final Logger log = LoggerFactory.getLogger(DisconnectApplicationListener.class);
 	private Map<String, Boolean> handling;
 	private VotingService votingService;
-	private PollService pollService;
 	private SimpMessagingTemplate template;
 
 	@Autowired
-	public DisconnectApplicationListener(VotingService votingService, PollService pollService,
-	                                     SimpMessagingTemplate template) {
+	public DisconnectApplicationListener(VotingService votingService, SimpMessagingTemplate template) {
 		this.votingService = votingService;
-		this.pollService = pollService;
 		this.template = template;
 		this.handling = new ConcurrentHashMap<>();
 	}

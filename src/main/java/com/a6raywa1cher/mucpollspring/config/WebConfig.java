@@ -18,14 +18,6 @@ public class WebConfig implements WebMvcConfigurer {
 		this.properties = properties;
 	}
 
-//	@Override
-//	public void addCorsMappings(CorsRegistry registry) {
-//		registry.addMapping("/**")
-//				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
-//				.allowedOrigins(properties.getCorsAllowedOrigins())
-//				.allowCredentials(true)
-//				.allowedHeaders("*");
-//	}
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {

@@ -1,7 +1,5 @@
 package com.a6raywa1cher.mucpollspring.config;
 
-//import com.a6raywa1cher.mucpollspring.config.security.CookieAuthFilter;
-
 import com.a6raywa1cher.mucpollspring.config.security.AuthenticationManagerImpl;
 import com.a6raywa1cher.mucpollspring.config.security.UserDetailsServiceImpl;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
@@ -60,10 +58,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.authorizeRequests()
 				.antMatchers("/").permitAll()
 				.antMatchers("/user/reg").permitAll()
-//				.antMatchers("/user/cookies").anonymous()
-				.antMatchers("/v2/api-docs", "/webjars/**", "/swagger-resources", "/swagger-resources/**", "/swagger-ui.html").permitAll()
+				.antMatchers("/v2/api-docs", "/webjars/**", "/swagger-resources", "/swagger-resources/**",
+						"/swagger-ui.html").permitAll()
 				.antMatchers("/csrf").permitAll()
-//				.antMatchers("/poll").anonymous()
 				.antMatchers("/poll").permitAll()
 				.anyRequest().authenticated()
 				.and()
@@ -71,7 +68,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.and()
 				.cors()
 				.configurationSource(corsConfigurationSource(appConfigProperties));
-//		http.addFilterBefore(new CookieAuthFilter(), BasicAuthenticationFilter.class);
 	}
 
 	@Bean

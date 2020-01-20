@@ -37,12 +37,13 @@ public class PollServiceImpl implements PollService {
 	public PollServiceImpl(UserRepository userRepository, PollRepository pollRepository,
 	                       PollQuestionRepository pollQuestionRepository,
 	                       PollQuestionAnswerRepository pollQuestionAnswerRepository,
-	                       PollSessionRepository pollSessionRepository) {
+	                       PollSessionRepository pollSessionRepository, TagService tagService) {
 		this.userRepository = userRepository;
 		this.pollRepository = pollRepository;
 		this.pollQuestionRepository = pollQuestionRepository;
 		this.pollQuestionAnswerRepository = pollQuestionAnswerRepository;
 		this.pollSessionRepository = pollSessionRepository;
+		this.tagService = tagService;
 	}
 
 	@Override
@@ -80,7 +81,6 @@ public class PollServiceImpl implements PollService {
 	}
 
 	@Override
-//	@org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
 	@Transactional
 	public Optional<Poll> getById(Long id) {
 		Optional<Poll> byId = pollRepository.findById(id);

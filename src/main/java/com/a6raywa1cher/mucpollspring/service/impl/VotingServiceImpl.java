@@ -181,17 +181,6 @@ public class VotingServiceImpl implements VotingService {
 		}
 	}
 
-//	@Override
-//	@Transactional
-//	public List<PollSession> closeAllVotesByUser(String username) {
-//		User user = userRepository.getByUsername(username).orElseThrow();
-//		return temporaryPollSessionRepository.getAllByUid(user.getId()).stream()
-//				.map(this::closeVote)
-//				.filter(Objects::nonNull)
-//				.collect(Collectors.toList());
-//	}
-
-
 	@Override
 	public List<PollSession> closeAllVotesBySimpSessionId(String simpSessionId) {
 		List<TemporaryPollSession> bySimpSessionId = temporaryPollSessionRepository.getAllBySimpSessionId(simpSessionId);

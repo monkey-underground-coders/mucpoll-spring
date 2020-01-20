@@ -1,6 +1,5 @@
 package com.a6raywa1cher.mucpollspring.config;
 
-import com.fasterxml.classmate.TypeResolver;
 import com.google.common.base.Predicates;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +21,7 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 	@Bean
-	public Docket api(TypeResolver typeResolver) {
+	public Docket api() {
 		List<SecurityScheme> schemeList = new ArrayList<>();
 		schemeList.add(new BasicAuth("Realm"));
 		ApiInfo apiInfo = new ApiInfoBuilder()
@@ -31,22 +30,15 @@ public class SwaggerConfig {
 				.licenseUrl("https://github.com/monkey-underground-coders/mucpoll-spring/blob/master/LICENSE")
 				.build();
 
-		//noinspection Guava
 		return new Docket(DocumentationType.SWAGGER_2)
 				.produces(Collections.singleton("application/json"))
 				.consumes(Collections.singleton("application/json"))
 				.host("")
-//				.ignoredParameterTypes(Authentication.class)
 				.securitySchemes(schemeList)
 				.useDefaultResponseMessages(true)
 				.apiInfo(apiInfo)
-//				.additionalModels(typeResolver.resolve(UploadScriptDTO.class))
 				.securityContexts(Arrays.asList(securityContext()))
 				.select()
-//				.apis(Predicates.or(
-//						Predicates.not(RequestHandlerSelectors.basePackage("org.springframework.boot")),
-//						RequestHandlerSelectors.basePackage("org.springframework.boot.actuate")))
-//				.apis(RequestHandlerSelectors.any())
 				.apis(RequestHandlerSelectors.basePackage("com.a6raywa1cher.mucpollspring.rest"))
 				.paths(PathSelectors.any())
 				.build();
@@ -62,16 +54,6 @@ public class SwaggerConfig {
 				.build();
 	}
 
-	//
-//	private SecurityContext commentsSecurityContext() {
-//		//noinspection Guava
-//		return SecurityContext.builder()
-//				.securityReferences(defaultAuth())
-//				.forPaths(PathSelectors.ant("/comment/**"))
-//				.forHttpMethods(Predicates.not(http -> http != null && http.matches("GET")))
-//				.build();
-//	}
-//
 	private List<SecurityReference> defaultAuth() {
 		AuthorizationScope authorizationScope
 				= new AuthorizationScope("global", "accessEverything");

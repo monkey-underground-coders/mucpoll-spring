@@ -84,10 +84,6 @@ public class PollSessionRepositoryImpl implements PollSessionRepository {
 		}
 	}
 
-	private long pathToLastModifiedTimestamp(Path path) {
-		return path.toFile().lastModified();
-	}
-
 	@Override
 	@SneakyThrows
 	public Page<PollSession> getPageByPid(Long pid, Pageable pageable) {

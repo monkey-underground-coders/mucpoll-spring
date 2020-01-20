@@ -7,6 +7,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
 @Configuration
@@ -38,5 +39,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 		registry.enableSimpleBroker("/topic")
 				.setHeartbeatValue(new long[]{10000, 20000})
 				.setTaskScheduler(this.messageBrokerTaskScheduler);
+	}
+
+	@Override
+	public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
+		registry.setMessageSizeLimit(128 * 1024);
 	}
 }

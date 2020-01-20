@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
@@ -85,20 +84,20 @@ public class PollSessionRepositoryImpl implements PollSessionRepository {
 		}
 	}
 
+	private long pathToLastModifiedTimestamp(Path path) {
+		return path.toFile().lastModified();
+	}
+
 	@Override
 	@SneakyThrows
 	public Page<PollSession> getPageByPid(Long pid, Pageable pageable) {
 		Path pathToPoll = pidToPath(pid);
 		Files.createDirectories(pathToPoll);
-		Sort.Order order = pageable.getSort().getOrderFor("recordedAt");
-		Comparator<Path> pathComparator = (order != null && order.getDirection().isAscending()) ?
-				Comparator.naturalOrder() : Comparator.reverseOrder();
 		AtomicLong total = new AtomicLong(0L);
 		return new PageImpl<>(Files.list(pathToPoll)
 				.filter(p -> uuid.matcher(p.getFileName().toString()).matches())
 				.peek(p -> total.getAndIncrement())
-				.sorted(Comparator.comparingLong(p -> p.toFile().lastModified()))
-				.sorted(pathComparator)
+				.sorted(Comparator.comparingLong((Path p) -> p.toFile().lastModified()).reversed())
 				.skip(pageable.getOffset())
 				.limit(pageable.getPageSize())
 				.map(p -> {

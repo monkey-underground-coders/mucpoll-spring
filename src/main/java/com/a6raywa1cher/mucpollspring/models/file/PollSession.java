@@ -8,6 +8,8 @@ import com.a6raywa1cher.mucpollspring.models.sql.PollQuestionAnswer;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.util.Pair;
@@ -38,7 +40,10 @@ public class PollSession {
 
 	public PollSession(TemporaryPollSession tps, Poll poll) {
 		sid = tps.getId();
-		this.pollInfo = new ObjectMapper().valueToTree(poll);
+		this.pollInfo = new ObjectMapper()
+				.registerModule(new Jdk8Module())
+				.registerModule(new JavaTimeModule())
+				.valueToTree(poll);
 		pid = tps.getPid();
 		startedAt = tps.getCreatedAt();
 		recordedAt = LocalDateTime.now();

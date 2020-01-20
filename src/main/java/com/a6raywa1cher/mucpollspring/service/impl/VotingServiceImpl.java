@@ -4,7 +4,6 @@ import com.a6raywa1cher.mucpollspring.dao.repository.file.PollSessionRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.redis.AnswerAndCountRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.redis.TemporaryPollSessionRepository;
 import com.a6raywa1cher.mucpollspring.dao.repository.sql.PollRepository;
-import com.a6raywa1cher.mucpollspring.dao.repository.sql.UserRepository;
 import com.a6raywa1cher.mucpollspring.models.file.PollSession;
 import com.a6raywa1cher.mucpollspring.models.redis.AnswerAndCount;
 import com.a6raywa1cher.mucpollspring.models.redis.TemporaryPollSession;
@@ -16,7 +15,12 @@ import com.a6raywa1cher.mucpollspring.service.exceptions.AnswerNotFoundException
 import com.a6raywa1cher.mucpollspring.service.exceptions.QuestionNotFoundException;
 import com.a6raywa1cher.mucpollspring.service.exceptions.TemporaryPollSessionNotFound;
 import com.a6raywa1cher.mucpollspring.service.interfaces.VotingService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,22 +35,21 @@ import java.util.stream.Collectors;
 
 
 @Service
+@Slf4j
 public class VotingServiceImpl implements VotingService {
 	private TemporaryPollSessionRepository temporaryPollSessionRepository;
 	private AnswerAndCountRepository answerAndCountRepository;
 	private PollSessionRepository pollSessionRepository;
-	private UserRepository userRepository;
 	private PollRepository pollRepository;
 
 	@Autowired
 	public VotingServiceImpl(TemporaryPollSessionRepository temporaryPollSessionRepository,
 	                         AnswerAndCountRepository answerAndCountRepository,
 	                         PollSessionRepository pollSessionRepository,
-	                         UserRepository userRepository, PollRepository pollRepository) {
+	                         PollRepository pollRepository) {
 		this.temporaryPollSessionRepository = temporaryPollSessionRepository;
 		this.answerAndCountRepository = answerAndCountRepository;
 		this.pollSessionRepository = pollSessionRepository;
-		this.userRepository = userRepository;
 		this.pollRepository = pollRepository;
 	}
 
@@ -158,15 +161,24 @@ public class VotingServiceImpl implements VotingService {
 				.map(AnswerAndCount::getCount)
 				.anyMatch(l -> l > 0);
 		if (isAnyVoteDetected) {
-			PollSession pollSession = pollSessionRepository.save(new PollSession(tps, poll));
-			pollRepository.incrementLaunchedCount(poll, 1);
-			temporaryPollSessionRepository.delete(tps);
-			return pollSession;
+			try {
+				PollSession pollSession = pollSessionRepository.save(new PollSession(tps, poll));
+				pollRepository.incrementLaunchedCount(poll, 1);
+				temporaryPollSessionRepository.delete(tps);
+				return pollSession;
+			} catch (NullPointerException npe) {
+				ObjectMapper objectMapper = new ObjectMapper()
+						.registerModule(new Jdk8Module())
+						.registerModule(new JavaTimeModule())
+						.enable(SerializationFeature.INDENT_OUTPUT);
+				log.error("Error while saving PollSession. tps:" + objectMapper.writeValueAsString(tps) + "\n"
+						+ "poll:" + (poll == null ? "null" : objectMapper.writeValueAsString(poll)), npe);
+				return null;
+			}
 		} else {
 			temporaryPollSessionRepository.delete(tps);
 			return null;
 		}
-
 	}
 
 //	@Override

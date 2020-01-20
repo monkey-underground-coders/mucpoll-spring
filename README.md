@@ -20,3 +20,4 @@ Built with Spring, WebSocket + Stomp. Using Redis, FS and SQL DB.
 2. Fill application.yml
 3. Run with Maven
 4. Run [mucpoll-ts](https://github.com/monkey-underground-coders/mucpoll-ts) (frontend)
+Visit http://localhost:8080/swagger-ui.html for Swagger.
